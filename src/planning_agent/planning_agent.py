@@ -84,20 +84,30 @@ class PlanningAgent:
         3. Ensure the action sequence follows the correct order and includes all necessary steps for safe and efficient disassembly.
         4. Consider the collaboration between the robotic arm and human operator, if applicable.
         5. Identify the specific element being worked on in each step.
+        6. Create individual JSON objects for each element, ensuring proper JSON formatting and structure.
 
         Guidelines:
         - Break down complex movements into a series of simpler actions.
         - Include necessary preparatory movements before each main action.
         - Consider the need for holding or stabilizing elements during disassembly.
         - For human actions, include a "human_action" step in the planning sequence.
-        - Use specific element names (e.g., "red_cube" instead of "red cube") for consistency.
+        - Use specific element names (e.g., "element_1" instead of "element 1") for consistency.
+        - Re-evaluate the plan and make adjustments as needed.
 
         Format your response as a JSON object with the following structure:
-        {{
-            "human_working": boolean,
-            "selected_element": "element_name",
-            "planning_sequence": ["action1", "action2", ...]
-        }}
+        [
+            {{
+                "human_working": boolean,
+                "selected_element": "element_1",
+                "planning_sequence": ["action1", "action2", ...]
+            }},
+            {{
+                "human_working": boolean,
+                "selected_element": "element_2",
+                "planning_sequence": ["action1", "action2", ...]
+            }},
+            ...
+        ]
 
         Ensure that:
         1. "human_working" is set to true if the current step requires human intervention; otherwise, it is false.
@@ -105,6 +115,7 @@ class PlanningAgent:
         3. The actions in the "planning_sequence" are organized in execution order.
         4. Include "human_action" steps where human intervention is required.
         5. Use underscores instead of spaces in element names and action parameters.
+        6. Each JSON object should represent a single element and its actions sequence.
 
         Planning Agent, please provide the structured action sequence based on the given disassembly plan:
         """
