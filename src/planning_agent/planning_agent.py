@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-from langchain_openai import OpenAI
+from langchain_openai import OpenAI, ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.schema import StrOutputParser
 from langchain.schema.runnable import Runnable
@@ -18,8 +18,12 @@ class RoboticAction(BaseModel):
     planning_sequence: list[str] = Field(..., description="List of actions for the robot to perform")
 
 class PlanningAgent:
-    def __init__(self):
-        self.llm = OpenAI(temperature=0)
+    def __init__(self, use_chat_model=False):
+        if use_chat_model:
+            self.llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
+        else:
+            self.llm = OpenAI(temperature=0)
+        
         self.prompt = PromptTemplate(
             input_variables=["plan"],
             template="Translate the following plan into a sequence of robotic actions:\n{plan}\n\nOutput the result as a JSON object with the following structure:\n{{\"human_working\": boolean, \"selected_element\": string, \"planning_sequence\": [string]}}"
@@ -55,14 +59,22 @@ class PlanningAgent:
             return False
 
 def main():
+    # Example usage with default OpenAI model
     planning_agent = PlanningAgent()
-    # Example usage
     plan = "Pick up the red cube and place it on the blue platform"
     success = planning_agent.execute_plan(plan)
     if success:
-        logging.info("Plan executed successfully")
+        logging.info("Plan executed successfully with OpenAI model")
     else:
-        logging.error("Plan execution failed")
+        logging.error("Plan execution failed with OpenAI model")
+
+    # Example usage with ChatGPT model
+    chat_planning_agent = PlanningAgent(use_chat_model=True)
+    success = chat_planning_agent.execute_plan(plan)
+    if success:
+        logging.info("Plan executed successfully with ChatGPT model")
+    else:
+        logging.error("Plan execution failed with ChatGPT model")
 
 if __name__ == "__main__":
     main()
