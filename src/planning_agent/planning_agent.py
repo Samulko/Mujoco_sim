@@ -7,6 +7,7 @@ import json
 import logging
 import time
 from typing import List
+import instructor
 from instructor import OpenAISchema
 
 # Configure logging
