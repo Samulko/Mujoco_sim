@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 
-import rospy
+import os
 from langchain.llms import OpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 import json
 from instructor import OpenAISchema
 from pydantic import Field
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class RoboticAction(OpenAISchema):
     human_working: bool = Field(..., description="Indicates if a human is working alongside the robot")
@@ -28,7 +32,7 @@ class PlanningAgent:
             action_sequence = RoboticAction.from_response(result)
             return action_sequence
         except json.JSONDecodeError:
-            rospy.logerr("Failed to parse JSON from LLM output")
+            logging.error("Failed to parse JSON from LLM output")
             return None
 
     def validate_action_sequence(self, action_sequence):
@@ -39,20 +43,22 @@ class PlanningAgent:
     def execute_plan(self, plan):
         action_sequence = self.generate_action_sequence(plan)
         if action_sequence and self.validate_action_sequence(action_sequence):
-            rospy.loginfo(f"Executing plan: {action_sequence.dict()}")
+            logging.info(f"Executing plan: {action_sequence.dict()}")
             # Here you would implement the actual execution of the action sequence
             return True
         else:
-            rospy.logerr("Failed to generate or validate action sequence")
+            logging.error("Failed to generate or validate action sequence")
             return False
 
-if __name__ == "__main__":
-    rospy.init_node('planning_agent')
+def main():
     planning_agent = PlanningAgent()
     # Example usage
     plan = "Pick up the red cube and place it on the blue platform"
     success = planning_agent.execute_plan(plan)
     if success:
-        rospy.loginfo("Plan executed successfully")
+        logging.info("Plan executed successfully")
     else:
-        rospy.logerr("Plan execution failed")
+        logging.error("Plan execution failed")
+
+if __name__ == "__main__":
+    main()
