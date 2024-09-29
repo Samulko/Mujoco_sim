@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import os
-from langchain.llms import OpenAI
+from langchain_community.llms import OpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
+from langchain_openai import OpenAI as OpenAIChat
 import json
 from instructor import OpenAISchema
 from pydantic import Field
