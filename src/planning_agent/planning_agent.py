@@ -94,7 +94,7 @@ class PlanningAgent:
         - Use specific element names (e.g., "element_1" instead of "element 1") for consistency.
         - Re-evaluate the plan and make adjustments as needed.
 
-        Format your response as a JSON object with the following structure:
+        Format your response as a JSON array of objects with the following structure:
         [
             {{
                 "human_working": boolean,
@@ -127,15 +127,16 @@ class PlanningAgent:
         except json.JSONDecodeError:
             # If parsing fails, try to extract JSON from the response
             try:
-                json_start = response.content.find('{')
-                json_end = response.content.rfind('}') + 1
+                json_start = response.content.find('[')
+                json_end = response.content.rfind(']') + 1
                 if json_start != -1 and json_end != -1:
                     json_str = response.content[json_start:json_end]
                     action_sequence = json.loads(json_str)
                 else:
-                    raise ValueError("No JSON object found in the response")
+                    raise ValueError("No JSON array found in the response")
             except (json.JSONDecodeError, ValueError) as e:
                 logging.error(f"Planning Agent: Failed to parse LLM response as JSON: {e}")
+                logging.error(f"Raw response content: {response.content}")
                 return None
 
         # Validate and clean up the action sequence
@@ -145,27 +146,49 @@ class PlanningAgent:
         return action_sequence
 
     def clean_action_sequence(self, action_sequence):
-        if not isinstance(action_sequence, dict):
+        if not isinstance(action_sequence, list):
+            logging.error("Planning Agent: Action sequence is not a list")
             return None
 
-        # Ensure all required keys are present
-        required_keys = ["human_working", "selected_element", "planning_sequence"]
-        if not all(key in action_sequence for key in required_keys):
-            return None
-
-        # Clean up the selected_element
-        action_sequence["selected_element"] = action_sequence["selected_element"].replace(" ", "_").lower()
-
-        # Clean up the planning_sequence
         cleaned_sequence = []
-        for action in action_sequence["planning_sequence"]:
-            cleaned_action = action.replace(" ", "_").lower()
-            if any(cleaned_action.startswith(valid_action) for valid_action in self.robot_actions.keys()):
-                cleaned_sequence.append(cleaned_action)
+        for item in action_sequence:
+            if not isinstance(item, dict):
+                logging.warning(f"Planning Agent: Skipping invalid item in action sequence: {item}")
+                continue
 
-        action_sequence["planning_sequence"] = cleaned_sequence
+            # Ensure all required keys are present
+            required_keys = ["human_working", "selected_element", "planning_sequence"]
+            if not all(key in item for key in required_keys):
+                logging.warning(f"Planning Agent: Skipping item missing required keys: {item}")
+                continue
 
-        return action_sequence
+            cleaned_item = {
+                "human_working": bool(item["human_working"]),
+                "selected_element": item["selected_element"].replace(" ", "_").lower(),
+                "planning_sequence": []
+            }
+
+            # Clean up the planning_sequence
+            for action in item["planning_sequence"]:
+                if isinstance(action, str):
+                    cleaned_action = action.replace(" ", "_").lower()
+                    if any(cleaned_action.startswith(valid_action) for valid_action in self.robot_actions.keys()):
+                        cleaned_item["planning_sequence"].append(cleaned_action)
+                    else:
+                        logging.warning(f"Planning Agent: Skipping invalid action: {action}")
+                else:
+                    logging.warning(f"Planning Agent: Skipping non-string action: {action}")
+
+            if cleaned_item["planning_sequence"]:
+                cleaned_sequence.append(cleaned_item)
+            else:
+                logging.warning(f"Planning Agent: Skipping item with empty planning sequence: {item}")
+
+        if not cleaned_sequence:
+            logging.error("Planning Agent: No valid items in action sequence after cleaning")
+            return None
+
+        return cleaned_sequence
 
     def validate_action_sequence(self, action_sequence):
         if action_sequence is None:
