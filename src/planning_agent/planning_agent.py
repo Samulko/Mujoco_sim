@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 
 import os
-from langchain_community.llms import OpenAI
-from langchain.chains import LLMChain
+from langchain_openai import OpenAI
 from langchain.prompts import PromptTemplate
-from langchain_openai import OpenAI as OpenAIChat
+from langchain.schema import StrOutputParser
+from langchain.schema.runnable import Runnable
+from pydantic import BaseModel, Field
 import json
-from instructor import OpenAISchema
-from pydantic import Field
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-class RoboticAction(OpenAISchema):
+class RoboticAction(BaseModel):
     human_working: bool = Field(..., description="Indicates if a human is working alongside the robot")
     selected_element: str = Field(..., description="The element being worked on")
     planning_sequence: list[str] = Field(..., description="List of actions for the robot to perform")
@@ -25,15 +24,19 @@ class PlanningAgent:
             input_variables=["plan"],
             template="Translate the following plan into a sequence of robotic actions:\n{plan}\n\nOutput the result as a JSON object with the following structure:\n{{\"human_working\": boolean, \"selected_element\": string, \"planning_sequence\": [string]}}"
         )
-        self.chain = LLMChain(llm=self.llm, prompt=self.prompt)
+        self.chain: Runnable = self.prompt | self.llm | StrOutputParser()
 
     def generate_action_sequence(self, plan):
-        result = self.chain.run(plan)
+        result = self.chain.invoke({"plan": plan})
         try:
-            action_sequence = RoboticAction.from_response(result)
+            action_data = json.loads(result)
+            action_sequence = RoboticAction(**action_data)
             return action_sequence
         except json.JSONDecodeError:
             logging.error("Failed to parse JSON from LLM output")
+            return None
+        except ValueError as e:
+            logging.error(f"Failed to create RoboticAction: {e}")
             return None
 
     def validate_action_sequence(self, action_sequence):
@@ -44,7 +47,7 @@ class PlanningAgent:
     def execute_plan(self, plan):
         action_sequence = self.generate_action_sequence(plan)
         if action_sequence and self.validate_action_sequence(action_sequence):
-            logging.info(f"Executing plan: {action_sequence.dict()}")
+            logging.info(f"Executing plan: {action_sequence.model_dump()}")
             # Here you would implement the actual execution of the action sequence
             return True
         else:
