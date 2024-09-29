@@ -6,19 +6,25 @@ from pydantic import BaseModel, Field
 import json
 import logging
 import time
+from typing import List
+import instructor
+from instructor import OpenAISchema
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-class RoboticAction(BaseModel):
+class RoboticAction(OpenAISchema):
     human_working: bool = Field(..., description="Indicates if a human is working alongside the robot")
     selected_element: str = Field(..., description="The element being worked on")
-    planning_sequence: list[str] = Field(..., description="List of actions for the robot to perform")
+    planning_sequence: List[str] = Field(..., description="List of actions for the robot to perform")
+
+class ActionSequence(OpenAISchema):
+    actions: List[RoboticAction] = Field(..., description="List of robotic actions to perform")
 
 class PlanningAgent:
     def __init__(self):
-        # Initialize ChatOpenAI
-        self.llm = ChatOpenAI(temperature=0.6, model_name="gpt-4-0125-preview")
+        # Initialize ChatOpenAI with Instructor
+        self.llm = instructor.patch(ChatOpenAI(temperature=0.6, model_name="gpt-4-0125-preview"))
 
         # Dictionary of possible robot actions
         self.robot_actions = {
@@ -41,19 +47,19 @@ class PlanningAgent:
             return False, "Failed to generate a valid action sequence."
 
         # Validate action sequence
-        if self.validate_action_sequence(action_sequence):
+        if self.validate_action_sequence(action_sequence.actions):
             # Execute preliminary steps
             self.execute_preliminary_steps()
 
             # Check if additional safety measures are needed
             if "unsafe" in plan.lower() or "modifications" in plan.lower():
-                action_sequence = self.add_safety_measures(action_sequence)
+                action_sequence.actions = self.add_safety_measures(action_sequence.actions)
 
             # Write the JSON file
             json_file_path = self.write_json_file(action_sequence)
 
             # Execute actions
-            success, execution_details = self.execute_actions(action_sequence)
+            success, execution_details = self.execute_actions(action_sequence.actions)
             return success, f"{execution_details}. JSON file created at {json_file_path}"
         else:
             return False, "Invalid action sequence. Please check the plan and try again."
@@ -84,7 +90,6 @@ class PlanningAgent:
         3. Ensure the action sequence follows the correct order and includes all necessary steps for safe and efficient disassembly.
         4. Consider the collaboration between the robotic arm and human operator, if applicable.
         5. Identify the specific element being worked on in each step.
-        6. Create individual JSON objects for each element, ensuring proper JSON formatting and structure.
 
         Guidelines:
         - Break down complex movements into a series of simpler actions.
@@ -94,56 +99,22 @@ class PlanningAgent:
         - Use specific element names (e.g., "element_1" instead of "element 1") for consistency.
         - Re-evaluate the plan and make adjustments as needed.
 
-        Format your response as a JSON array of objects with the following structure:
-        [
-            {{
-                "human_working": boolean,
-                "selected_element": "element_1",
-                "planning_sequence": ["action1", "action2", ...]
-            }},
-            {{
-                "human_working": boolean,
-                "selected_element": "element_2",
-                "planning_sequence": ["action1", "action2", ...]
-            }},
-            ...
-        ]
-
         Ensure that:
         1. "human_working" is set to true if the current step requires human intervention; otherwise, it is false.
         2. "selected_element" specifies the element being worked on in the current step.
         3. The actions in the "planning_sequence" are organized in execution order.
         4. Include "human_action" steps where human intervention is required.
         5. Use underscores instead of spaces in element names and action parameters.
-        6. Each JSON object should represent a single element and its actions sequence.
 
-        Planning Agent, please provide the structured action sequence based on the given disassembly plan:
+        Planning Agent, please provide the structured action sequence based on the given disassembly plan.
         """
-        response = self.llm.invoke(prompt)
-        
         try:
-            # First, try to parse the entire response as JSON
-            action_sequence = json.loads(response.content)
-        except json.JSONDecodeError:
-            # If parsing fails, try to extract JSON from the response
-            try:
-                json_start = response.content.find('[')
-                json_end = response.content.rfind(']') + 1
-                if json_start != -1 and json_end != -1:
-                    json_str = response.content[json_start:json_end]
-                    action_sequence = json.loads(json_str)
-                else:
-                    raise ValueError("No JSON array found in the response")
-            except (json.JSONDecodeError, ValueError) as e:
-                logging.error(f"Planning Agent: Failed to parse LLM response as JSON: {e}")
-                logging.error(f"Raw response content: {response.content}")
-                return None
-
-        # Validate and clean up the action sequence
-        action_sequence = self.clean_action_sequence(action_sequence)
-
-        logging.info(f"Planning Agent: Translated plan into action sequence: {action_sequence}")
-        return action_sequence
+            action_sequence = self.llm.invoke(ActionSequence, prompt)
+            logging.info(f"Planning Agent: Translated plan into action sequence: {action_sequence}")
+            return action_sequence
+        except Exception as e:
+            logging.error(f"Planning Agent: Failed to generate action sequence: {e}")
+            return None
 
     def clean_action_sequence(self, action_sequence):
         if not isinstance(action_sequence, list):
@@ -256,8 +227,9 @@ class PlanningAgent:
     def execute_actions(self, action_sequence):
         # Simulate executing actions
         try:
-            for action in action_sequence["planning_sequence"]:
-                logging.info(f"Planning Agent: Executed action: {action}")
+            for action in action_sequence:
+                for step in action.planning_sequence:
+                    logging.info(f"Planning Agent: Executed action: {step}")
             return True, "Action sequence executed successfully."
         except Exception as e:
             logging.error(f"Planning Agent: Error executing actions: {e}")
