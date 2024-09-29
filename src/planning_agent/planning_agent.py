@@ -90,10 +90,11 @@ class PlanningAgent:
         - Include necessary preparatory movements before each main action.
         - Consider the need for holding or stabilizing elements during disassembly.
         - For human actions, include a "human_action" step in the planning sequence.
+        - Use specific element names (e.g., "red_cube" instead of "red cube") for consistency.
 
         Format your response as a JSON object with the following structure:
         {{
-            "human_working": true,
+            "human_working": boolean,
             "selected_element": "element_name",
             "planning_sequence": ["action1", "action2", ...]
         }}
@@ -103,6 +104,7 @@ class PlanningAgent:
         2. "selected_element" specifies the element being worked on in the current step.
         3. The actions in the "planning_sequence" are organized in execution order.
         4. Include "human_action" steps where human intervention is required.
+        5. Use underscores instead of spaces in element names and action parameters.
 
         Planning Agent, please provide the structured action sequence based on the given disassembly plan:
         """
@@ -125,7 +127,33 @@ class PlanningAgent:
                 logging.error(f"Planning Agent: Failed to parse LLM response as JSON: {e}")
                 return None
 
+        # Validate and clean up the action sequence
+        action_sequence = self.clean_action_sequence(action_sequence)
+
         logging.info(f"Planning Agent: Translated plan into action sequence: {action_sequence}")
+        return action_sequence
+
+    def clean_action_sequence(self, action_sequence):
+        if not isinstance(action_sequence, dict):
+            return None
+
+        # Ensure all required keys are present
+        required_keys = ["human_working", "selected_element", "planning_sequence"]
+        if not all(key in action_sequence for key in required_keys):
+            return None
+
+        # Clean up the selected_element
+        action_sequence["selected_element"] = action_sequence["selected_element"].replace(" ", "_").lower()
+
+        # Clean up the planning_sequence
+        cleaned_sequence = []
+        for action in action_sequence["planning_sequence"]:
+            cleaned_action = action.replace(" ", "_").lower()
+            if any(cleaned_action.startswith(valid_action) for valid_action in self.robot_actions.keys()):
+                cleaned_sequence.append(cleaned_action)
+
+        action_sequence["planning_sequence"] = cleaned_sequence
+
         return action_sequence
 
     def validate_action_sequence(self, action_sequence):
@@ -146,11 +174,20 @@ class PlanningAgent:
             return False
 
         # Check if all actions in the sequence are valid
-        valid_actions = ["move_in_cartesian_path", "moveto", "picking", "holding", "placing", "human_action"]
         invalid_actions = [action for action in action_sequence["planning_sequence"] 
-                           if not any(action.startswith(valid) for valid in valid_actions)]
+                           if not any(action.startswith(valid) for valid in self.robot_actions.keys())]
         if invalid_actions:
             logging.error(f"Planning Agent: Invalid actions in sequence: {', '.join(invalid_actions)}")
+            return False
+
+        # Check if selected_element is a non-empty string
+        if not isinstance(action_sequence["selected_element"], str) or not action_sequence["selected_element"]:
+            logging.error("Planning Agent: selected_element is not a valid string")
+            return False
+
+        # Check if human_working is a boolean
+        if not isinstance(action_sequence["human_working"], bool):
+            logging.error("Planning Agent: human_working is not a boolean")
             return False
 
         logging.info("Planning Agent: Action sequence validated successfully")
