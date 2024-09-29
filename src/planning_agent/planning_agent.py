@@ -175,36 +175,29 @@ class PlanningAgent:
             return False
 
         for item in action_sequence:
-            if not isinstance(item, dict):
+            if not isinstance(item, RoboticAction):
                 logging.error(f"Planning Agent: Invalid item in action sequence: {item}")
                 return False
 
-            # Check if all required keys are present
-            required_keys = ["human_working", "selected_element", "planning_sequence"]
-            missing_keys = [key for key in required_keys if key not in item]
-            if missing_keys:
-                logging.error(f"Planning Agent: Missing required keys in action sequence item: {', '.join(missing_keys)}")
-                return False
-
             # Check if planning_sequence is a list
-            if not isinstance(item["planning_sequence"], list):
+            if not isinstance(item.planning_sequence, list):
                 logging.error("Planning Agent: planning_sequence is not a list")
                 return False
 
             # Check if all actions in the sequence are valid
-            invalid_actions = [action for action in item["planning_sequence"] 
+            invalid_actions = [action for action in item.planning_sequence 
                                if not any(action.startswith(valid) for valid in self.robot_actions.keys())]
             if invalid_actions:
                 logging.error(f"Planning Agent: Invalid actions in sequence: {', '.join(invalid_actions)}")
                 return False
 
             # Check if selected_element is a non-empty string
-            if not isinstance(item["selected_element"], str) or not item["selected_element"]:
+            if not isinstance(item.selected_element, str) or not item.selected_element:
                 logging.error("Planning Agent: selected_element is not a valid string")
                 return False
 
             # Check if human_working is a boolean
-            if not isinstance(item["human_working"], bool):
+            if not isinstance(item.human_working, bool):
                 logging.error("Planning Agent: human_working is not a boolean")
                 return False
 
@@ -222,8 +215,14 @@ class PlanningAgent:
         timestamp = time.time()
         json_file_name = f"action_sequence_{timestamp}.json"
         json_file_path = os.path.join(robot_sequence_dir, json_file_name)
+        
+        # Convert ActionSequence to a dictionary
+        action_sequence_dict = {
+            "actions": [action.dict() for action in action_sequence.actions]
+        }
+        
         with open(json_file_path, 'w') as json_file:
-            json.dump(action_sequence, json_file, indent=4)
+            json.dump(action_sequence_dict, json_file, indent=4)
         logging.info(f"Planning Agent: Action sequence JSON file created at {json_file_path}")
         
         # Print the contents of the JSON file
