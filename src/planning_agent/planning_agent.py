@@ -191,38 +191,43 @@ class PlanningAgent:
         return cleaned_sequence
 
     def validate_action_sequence(self, action_sequence):
-        if action_sequence is None:
-            logging.error("Planning Agent: Action sequence is None")
-            return False
-        
-        # Check if all required keys are present
-        required_keys = ["human_working", "selected_element", "planning_sequence"]
-        missing_keys = [key for key in required_keys if key not in action_sequence]
-        if missing_keys:
-            logging.error(f"Planning Agent: Missing required keys in action sequence: {', '.join(missing_keys)}")
+        if not isinstance(action_sequence, list):
+            logging.error("Planning Agent: Action sequence is not a list")
             return False
 
-        # Check if planning_sequence is a list
-        if not isinstance(action_sequence["planning_sequence"], list):
-            logging.error("Planning Agent: planning_sequence is not a list")
-            return False
+        for item in action_sequence:
+            if not isinstance(item, dict):
+                logging.error(f"Planning Agent: Invalid item in action sequence: {item}")
+                return False
 
-        # Check if all actions in the sequence are valid
-        invalid_actions = [action for action in action_sequence["planning_sequence"] 
-                           if not any(action.startswith(valid) for valid in self.robot_actions.keys())]
-        if invalid_actions:
-            logging.error(f"Planning Agent: Invalid actions in sequence: {', '.join(invalid_actions)}")
-            return False
+            # Check if all required keys are present
+            required_keys = ["human_working", "selected_element", "planning_sequence"]
+            missing_keys = [key for key in required_keys if key not in item]
+            if missing_keys:
+                logging.error(f"Planning Agent: Missing required keys in action sequence item: {', '.join(missing_keys)}")
+                return False
 
-        # Check if selected_element is a non-empty string
-        if not isinstance(action_sequence["selected_element"], str) or not action_sequence["selected_element"]:
-            logging.error("Planning Agent: selected_element is not a valid string")
-            return False
+            # Check if planning_sequence is a list
+            if not isinstance(item["planning_sequence"], list):
+                logging.error("Planning Agent: planning_sequence is not a list")
+                return False
 
-        # Check if human_working is a boolean
-        if not isinstance(action_sequence["human_working"], bool):
-            logging.error("Planning Agent: human_working is not a boolean")
-            return False
+            # Check if all actions in the sequence are valid
+            invalid_actions = [action for action in item["planning_sequence"] 
+                               if not any(action.startswith(valid) for valid in self.robot_actions.keys())]
+            if invalid_actions:
+                logging.error(f"Planning Agent: Invalid actions in sequence: {', '.join(invalid_actions)}")
+                return False
+
+            # Check if selected_element is a non-empty string
+            if not isinstance(item["selected_element"], str) or not item["selected_element"]:
+                logging.error("Planning Agent: selected_element is not a valid string")
+                return False
+
+            # Check if human_working is a boolean
+            if not isinstance(item["human_working"], bool):
+                logging.error("Planning Agent: human_working is not a boolean")
+                return False
 
         logging.info("Planning Agent: Action sequence validated successfully")
         return True
