@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
 import os
-from langchain_openai import ChatOpenAI
-from pydantic import BaseModel, Field
+from openai import OpenAI
+from pydantic import Field
 import json
 import logging
 import time
 from typing import List
-import instructor
 from instructor import OpenAISchema
 
 # Configure logging
@@ -23,8 +22,9 @@ class ActionSequence(OpenAISchema):
 
 class PlanningAgent:
     def __init__(self):
-        # Initialize ChatOpenAI with Instructor
-        self.llm = instructor.patch(ChatOpenAI(temperature=0.6, model_name="gpt-4-0125-preview"))
+        # Initialize OpenAI client with Instructor
+        self.client = OpenAI()
+        self.client = instructor.patch(self.client)
 
         # Dictionary of possible robot actions
         self.robot_actions = {
@@ -109,7 +109,14 @@ class PlanningAgent:
         Planning Agent, please provide the structured action sequence based on the given disassembly plan.
         """
         try:
-            action_sequence = self.llm.invoke(ActionSequence, prompt)
+            action_sequence = self.client.chat.completions.create(
+                model="gpt-4-0125-preview",
+                response_model=ActionSequence,
+                messages=[
+                    {"role": "system", "content": "You are a planning agent that translates disassembly plans into structured action sequences."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
             logging.info(f"Planning Agent: Translated plan into action sequence: {action_sequence}")
             return action_sequence
         except Exception as e:
