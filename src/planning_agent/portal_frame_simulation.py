@@ -40,32 +40,31 @@ def reset_xml():
 
 def run_simulation():
     try:
-        model, data = load_model(WORKING_XML_PATH)
-        with mujoco.viewer.launch_passive(model, data) as viewer:
-            viewer.cam.azimuth = 90
-            viewer.cam.distance = 10.0
-            viewer.cam.elevation = -20
+        while True:
+            model, data = load_model(WORKING_XML_PATH)
+            print("\nCurrent model information:")
+            print_model_info(model)
 
-            while viewer.is_running():
-                print("\nCurrent model information:")
-                print_model_info(model)
-
-                user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
-                
-                if user_input.lower() == 'q':
-                    break
-                
-                if user_input in ["column1", "column2", "beam"]:
-                    if remove_element(WORKING_XML_PATH, user_input):
-                        print(f"Element {user_input} removed. Restarting simulation...")
-                        model, data = load_model(WORKING_XML_PATH)
-                        viewer.load_model(model)
-                    else:
-                        print("Failed to remove element. Continuing with current model.")
+            user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
+            
+            if user_input.lower() == 'q':
+                break
+            
+            if user_input in ["column1", "column2", "beam"]:
+                if remove_element(WORKING_XML_PATH, user_input):
+                    print(f"Element {user_input} removed. Restarting simulation...")
+                    model, data = load_model(WORKING_XML_PATH)
                 else:
-                    print("Invalid input. Please try again.")
+                    print("Failed to remove element. Continuing with current model.")
+            else:
+                print("Invalid input. Please try again.")
 
-                print("Simulating for 10 seconds...")
+            print("Simulating for 10 seconds...")
+            with mujoco.viewer.launch_passive(model, data) as viewer:
+                viewer.cam.azimuth = 90
+                viewer.cam.distance = 5.0
+                viewer.cam.elevation = -20
+                
                 start_time = time.time()
                 while time.time() - start_time < 10 and viewer.is_running():
                     step_start = time.time()
