@@ -118,6 +118,7 @@ def run_simulation():
             model, data = load_model(WORKING_XML_PATH)
             print("\nCurrent model information:")
             print_model_info(model)
+            initialize_positions(model, data)  # Initialize positions for the current model
 
             stop_event = threading.Event()
             viewer_thread = threading.Thread(target=run_viewer, args=(model, data, stop_event))
