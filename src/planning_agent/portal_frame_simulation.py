@@ -41,18 +41,33 @@ def print_model_info(model):
 
 def initialize_positions(model, data):
     global initial_positions
-    initial_positions = {i: data.qpos[7*i:7*i+3].copy() for i in range(1, model.nbody)}
+    initial_positions = {}
+    for i in range(1, model.nbody):
+        if 7*i+3 <= len(data.qpos):
+            initial_positions[i] = data.qpos[7*i:7*i+3].copy()
+        else:
+            print(f"Warning: Unable to initialize position for body {i}")
 
 def is_structure_collapsed(model, data, displacement_threshold=0.5, rotation_threshold=0.5, floor_threshold=0.1):
     for i in range(1, model.nbody):
+        # Check if the body still exists in the model
+        if 7*i+7 > len(data.qpos):
+            continue  # Skip this body if it no longer exists
+
         # Check total displacement
         current_pos = data.qpos[7*i:7*i+3]
+        if i not in initial_positions:
+            print(f"Warning: No initial position for body {i}")
+            continue
         initial_pos = initial_positions[i]
         displacement = np.linalg.norm(current_pos - initial_pos)
         
         # Check rotation (simplified, using quaternion)
         quat = data.qpos[7*i+3:7*i+7]
-        rotation_angle = 2 * np.arccos(np.abs(quat[0]))  # Angle from identity rotation
+        if len(quat) > 0:
+            rotation_angle = 2 * np.arccos(np.abs(quat[0]))  # Angle from identity rotation
+        else:
+            rotation_angle = 0  # Default to no rotation if quaternion is empty
         
         # Check if body is close to the floor
         height_above_floor = current_pos[2]  # z-coordinate
