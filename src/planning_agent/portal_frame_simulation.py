@@ -8,6 +8,8 @@ import threading
 
 STRUCTURE_COLLAPSED = False
 
+STRUCTURE_COLLAPSED = False
+
 ORIGINAL_XML_PATH = "portal_frame_original.xml"
 WORKING_XML_PATH = "portal_frame.xml"
 
@@ -36,6 +38,12 @@ def print_model_info(model):
     for i in range(model.nbody):
         body_name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, i)
         print(f"Body {i}: {body_name}")
+
+def is_structure_collapsed(data, velocity_threshold=0.5):
+    for i in range(1, data.nbody):  # Start from 1 to skip the world body
+        if any(abs(v) > velocity_threshold for v in data.qvel[6*i:6*i+6]):
+            return True
+    return False
 
 def is_structure_collapsed(data, velocity_threshold=1.0):
     for i in range(1, data.nbody):  # Start from 1 to skip the world body
