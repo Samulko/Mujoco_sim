@@ -20,21 +20,18 @@ def run_simulation():
     model, data = load_model(xml_path)
 
     with mujoco.viewer.launch_passive(model, data) as viewer:
-        while True:
+        while viewer.is_running():
             current_hash = get_file_hash(xml_path)
             if current_hash != last_modified_hash:
                 print("XML file changed. Reloading model...")
                 model, data = load_model(xml_path)
-                viewer.load_model(model)
-                mujoco.mj_resetData(model, data)
+                viewer.close()
+                viewer = mujoco.viewer.launch_passive(model, data)
                 last_modified_hash = current_hash
 
             mujoco.mj_step(model, data)
             viewer.sync()
             time.sleep(0.01)
-
-            if not viewer.is_running():
-                break
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
