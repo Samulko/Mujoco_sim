@@ -8,16 +8,16 @@ xml = """
     <worldbody>
         <geom name="floor" pos="0 0 0" size="5 5 0.1" type="plane" rgba="0.8 0.9 0.8 1"/>
         <body name="column1" pos="-1 0 1">
-            <joint type="free"/>
-            <geom name="column1" type="capsule" size="0.1 1" rgba="0.8 0.6 0.4 1"/>
+            <joint type="fixed"/>
+            <geom name="column1" type="box" size="0.1 0.1 1" rgba="0.8 0.6 0.4 1"/>
         </body>
         <body name="beam" pos="0 0 2">
-            <joint type="free"/>
-            <geom name="beam" type="capsule" size="0.1 1" rgba="0.8 0.6 0.4 1" euler="0 1.57 0"/>
+            <joint type="fixed"/>
+            <geom name="beam" type="box" size="1.1 0.1 0.1" rgba="0.8 0.6 0.4 1"/>
         </body>
-        <body name="column3" pos="1 0 1">
-            <joint type="free"/>
-            <geom name="column3" type="capsule" size="0.1 1" rgba="0.8 0.6 0.4 1"/>
+        <body name="column2" pos="1 0 1">
+            <joint type="fixed"/>
+            <geom name="column2" type="box" size="0.1 0.1 1" rgba="0.8 0.6 0.4 1"/>
         </body>
     </worldbody>
 </mujoco>
@@ -36,8 +36,9 @@ def run_simulation(model, remove_element=None, steps=1000):
             viewer.sync()
             
             # Check if structure has fallen
-            if any(data.qpos[2::7] < 0.5):  # Check z-position of bodies
-                print(f"Structure fell {'without ' + remove_element if remove_element else ''}")
+            beam_z = data.body('beam').xpos[2]
+            if beam_z < 1.8:  # Check if beam has fallen below 90% of its original height
+                print(f"Structure collapsed {'without ' + remove_element if remove_element else ''}")
                 viewer.sync()
                 input("Press Enter to continue...")
                 return True
@@ -54,7 +55,7 @@ def main():
     run_simulation(model)
     
     # Run simulations removing each element
-    for element in ["column1", "beam", "column3"]:
+    for element in ["column1", "beam", "column2"]:
         run_simulation(model, remove_element=element)
 
 if __name__ == "__main__":
