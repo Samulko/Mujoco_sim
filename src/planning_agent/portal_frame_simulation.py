@@ -3,6 +3,7 @@ import sys
 import os
 import platform
 import traceback
+import subprocess
 
 MATPLOTLIB_AVAILABLE = False
 try:
@@ -11,11 +12,20 @@ try:
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
     MATPLOTLIB_AVAILABLE = True
-    print("matplotlib is available. Visualization will be enabled.")
-except ImportError:
-    print("matplotlib is not installed. Visualization will be disabled.")
-    print("To enable visualization, please install matplotlib using:")
-    print("pip install matplotlib")
+    print(f"matplotlib version {matplotlib.__version__} is available. Visualization will be enabled.")
+except ImportError as e:
+    print(f"Error importing matplotlib: {e}")
+    print("Attempting to get more information about matplotlib installation...")
+    try:
+        pip_output = subprocess.check_output(["pip", "show", "matplotlib"]).decode()
+        print("Pip information for matplotlib:")
+        print(pip_output)
+    except subprocess.CalledProcessError:
+        print("Unable to get pip information for matplotlib.")
+    
+    print("\nTo enable visualization, please ensure matplotlib is correctly installed.")
+    print("You can try reinstalling matplotlib using:")
+    print("pip install --upgrade --force-reinstall matplotlib")
 
 print("Python version:", sys.version)
 print("NumPy version:", np.__version__)
