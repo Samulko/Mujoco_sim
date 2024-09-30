@@ -8,27 +8,25 @@ def get_file_hash(filename):
     with open(filename, "rb") as f:
         return hashlib.md5(f.read()).hexdigest()
 
+def load_model(xml_path):
+    model = mujoco.MjModel.from_xml_path(xml_path)
+    data = mujoco.MjData(model)
+    return model, data
+
 def run_simulation():
     xml_path = "portal_frame.xml"
     last_modified_hash = get_file_hash(xml_path)
 
-    def load_model():
-        model = mujoco.MjModel.from_xml_path(xml_path)
-        data = mujoco.MjData(model)
-        model.opt.gravity[2] = -9.81
-        model.opt.timestep = 0.002
-        model.opt.integrator = 0
-        return model, data
-
-    model, data = load_model()
+    model, data = load_model(xml_path)
 
     with mujoco.viewer.launch_passive(model, data) as viewer:
         while True:
             current_hash = get_file_hash(xml_path)
             if current_hash != last_modified_hash:
                 print("XML file changed. Reloading model...")
-                model, data = load_model()
+                model, data = load_model(xml_path)
                 viewer.load_model(model)
+                mujoco.mj_resetData(model, data)
                 last_modified_hash = current_hash
 
             mujoco.mj_step(model, data)
