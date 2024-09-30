@@ -39,15 +39,11 @@ def print_model_info(model):
         body_name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, i)
         print(f"Body {i}: {body_name}")
 
-def is_structure_collapsed(data, velocity_threshold=0.5):
-    for i in range(1, data.nbody):  # Start from 1 to skip the world body
-        if any(abs(v) > velocity_threshold for v in data.qvel[6*i:6*i+6]):
-            return True
-    return False
-
-def is_structure_collapsed(data, velocity_threshold=1.0):
-    for i in range(1, data.nbody):  # Start from 1 to skip the world body
-        if any(abs(v) > velocity_threshold for v in data.qvel[6*i:6*i+6]):
+def is_structure_collapsed(data, velocity_threshold=0.1):
+    for i in range(1, data.nbody):
+        max_velocity = max(abs(v) for v in data.qvel[6*i:6*i+6])
+        if max_velocity > velocity_threshold:
+            print(f"Debug: Body {i} max velocity: {max_velocity}")
             return True
     return False
 
@@ -68,7 +64,7 @@ def run_simulation():
             if viewer is None:
                 print("Failed to launch MuJoCo viewer. Simulation will run without visualization.")
                 return
-            
+        
             def align_view():
                 viewer.cam.lookat[:] = model.stat.center
                 viewer.cam.distance = 10 * model.stat.extent
@@ -76,13 +72,17 @@ def run_simulation():
                 viewer.cam.elevation = -20
 
             align_view()  # Initial alignment
-            
+        
+            step_count = 0
             while not stop_event.is_set() and viewer.is_running():
                 viewer.sync()
                 mujoco.mj_step(model, data)
-                if not STRUCTURE_COLLAPSED and is_structure_collapsed(data):
-                    STRUCTURE_COLLAPSED = True
-                    print("Log: collapsed: true")
+                step_count += 1
+                if step_count % 10 == 0:  # Check every 10 steps
+                    if not STRUCTURE_COLLAPSED and is_structure_collapsed(data):
+                        STRUCTURE_COLLAPSED = True
+                        print("Log: collapsed: true")
+                        print(f"Debug: Collapse detected at step {step_count}")
                 time.sleep(0.01)
         except Exception as e:
             print(f"An error occurred in the viewer thread: {e}")
@@ -115,6 +115,7 @@ def run_simulation():
                 viewer.close()
                 viewer = None
 
+            print(f"Debug: STRUCTURE_COLLAPSED = {STRUCTURE_COLLAPSED}")
             if not STRUCTURE_COLLAPSED:
                 print("Log: collapsed: false")
 
