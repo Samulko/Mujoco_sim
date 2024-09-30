@@ -39,37 +39,38 @@ def reset_xml():
     print("Reset XML file to original state")
 
 def run_simulation():
-    model, data = load_model(WORKING_XML_PATH)
-    print("Initial model information:")
-    print_model_info(model)
-
     try:
-        with mujoco.viewer.launch_passive(model, data) as viewer:
-            viewer.cam.azimuth = 90
-            viewer.cam.distance = 5.0
-            viewer.cam.elevation = -20
+        while True:
+            model, data = load_model(WORKING_XML_PATH)
+            print("\nCurrent model information:")
+            print_model_info(model)
 
-            last_input_time = time.time()
-            while viewer.is_running():
-                step_start = time.time()
-                
-                mujoco.mj_step(model, data)
-                viewer.sync()
+            with mujoco.viewer.launch_passive(model, data) as viewer:
+                viewer.cam.azimuth = 90
+                viewer.cam.distance = 5.0
+                viewer.cam.elevation = -20
 
-                current_time = time.time()
-                if current_time - last_input_time >= 5.0:  # Check for input every 5 seconds
-                    user_input = input("Enter element to remove (column1, column2, beam) or press Enter to continue: ")
-                    if user_input in ["column1", "column2", "beam"]:
-                        if remove_element(WORKING_XML_PATH, user_input):
-                            model, data = load_model(WORKING_XML_PATH)
-                            viewer.update_model(model)
-                            print("Model information after removal:")
-                            print_model_info(model)
-                            time.sleep(1)  # Allow time for physics to stabilize
-                    last_input_time = current_time
+                start_time = time.time()
+                while time.time() - start_time < 10 and viewer.is_running():
+                    step_start = time.time()
+                    mujoco.mj_step(model, data)
+                    viewer.sync()
+                    time_to_sleep = max(0, 0.001 - (time.time() - step_start))
+                    time.sleep(time_to_sleep)
 
-                time_to_sleep = max(0, 0.001 - (time.time() - step_start))
-                time.sleep(time_to_sleep)
+            user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
+            
+            if user_input.lower() == 'q':
+                break
+            
+            if user_input in ["column1", "column2", "beam"]:
+                if remove_element(WORKING_XML_PATH, user_input):
+                    print(f"Element {user_input} removed. Restarting simulation...")
+                else:
+                    print("Failed to remove element. Continuing with current model.")
+            else:
+                print("Invalid input. Please try again.")
+
     except KeyboardInterrupt:
         print("\nExiting simulation...")
     finally:
