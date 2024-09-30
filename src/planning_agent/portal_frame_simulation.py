@@ -1,6 +1,21 @@
 import mujoco
 import mujoco.viewer
 import time
+import os
+import sys
+
+# Get the directory of the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Get the parent directory of the current directory (should be 'src')
+parent_dir = os.path.dirname(current_dir)
+# Get the parent directory of 'src' (should be the project root)
+project_root = os.path.dirname(parent_dir)
+
+# Change the current working directory to the project root
+os.chdir(project_root)
+
+# Add the 'src' directory to the Python path
+sys.path.append(os.path.join(project_root, 'src'))
 
 # Define the MuJoCo model XML
 xml = """
