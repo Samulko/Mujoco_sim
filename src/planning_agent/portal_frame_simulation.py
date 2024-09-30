@@ -91,11 +91,11 @@ def run_simulation():
 
                 if remove_element(WORKING_XML_PATH, user_input):
                     print(f"Element {user_input} removed. Restarting simulation...")
+                    continue  # This will restart the loop, loading the new model and starting a new simulation
                 else:
                     print("Failed to remove element. Continuing with current model.")
             else:
                 print("Invalid input. Please try again.")
-                continue
 
     except KeyboardInterrupt:
         print("\nExiting simulation...")
