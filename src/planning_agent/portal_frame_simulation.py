@@ -85,13 +85,20 @@ def run_simulation():
             time.sleep(2)  # Give some time for the viewer to stabilize
 
             print("Prompting for user input...")
-            user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
-            print(f"Received user input: {user_input}")
+            try:
+                user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
+                print(f"Received user input: {user_input}")
+            except EOFError:
+                print("\nEOF detected. Exiting simulation...")
+                break
 
             stop_event.set()
             print("Stopping simulation thread...")
-            sim_thread.join()
-            print("Simulation thread stopped.")
+            sim_thread.join(timeout=5)  # Wait for up to 5 seconds
+            if sim_thread.is_alive():
+                print("Warning: Simulation thread did not stop in time.")
+            else:
+                print("Simulation thread stopped.")
 
             if user_input.lower() == 'q':
                 break
@@ -103,7 +110,6 @@ def run_simulation():
                     print("Failed to remove element. Continuing with current model.")
             else:
                 print("Invalid input. Please try again.")
-                continue
 
             # Reload the model after removal attempt
             model, data = load_model(WORKING_XML_PATH)
@@ -112,6 +118,7 @@ def run_simulation():
         print("\nExiting simulation...")
     finally:
         reset_xml()
+        print("Simulation ended.")
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
