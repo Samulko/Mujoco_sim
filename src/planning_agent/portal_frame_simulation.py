@@ -97,6 +97,10 @@ def run_simulation():
                     print("Failed to remove element. Continuing with current model.")
             else:
                 print("Invalid input. Please try again.")
+                continue
+
+            # Reload the model after removal attempt
+            model, data = load_model(WORKING_XML_PATH)
 
     except KeyboardInterrupt:
         print("\nExiting simulation...")
