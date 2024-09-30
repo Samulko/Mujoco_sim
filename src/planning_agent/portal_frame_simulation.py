@@ -43,8 +43,8 @@ def initialize_positions(model, data):
     global initial_positions
     initial_positions = {i: data.qpos[7*i:7*i+3].copy() for i in range(1, model.nbody)}
 
-def is_structure_collapsed(data, displacement_threshold=0.5, rotation_threshold=0.5, floor_threshold=0.1):
-    for i in range(1, data.nbody):
+def is_structure_collapsed(model, data, displacement_threshold=0.5, rotation_threshold=0.5, floor_threshold=0.1):
+    for i in range(1, model.nbody):
         # Check total displacement
         current_pos = data.qpos[7*i:7*i+3]
         initial_pos = initial_positions[i]
@@ -124,7 +124,7 @@ def run_simulation():
                     # Run the simulation for a few seconds to allow collapse to occur
                     for _ in range(500):  # Assuming 100 steps per second, this runs for 5 seconds
                         mujoco.mj_step(model, data)
-                        if is_structure_collapsed(data):
+                        if is_structure_collapsed(model, data):
                             STRUCTURE_COLLAPSED = True
                             print("Log: collapsed: true")
                             break
