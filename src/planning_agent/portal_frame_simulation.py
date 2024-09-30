@@ -3,6 +3,8 @@ import sys
 import os
 import platform
 import traceback
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 print("Python version:", sys.version)
 print("NumPy version:", np.__version__)
@@ -126,3 +128,69 @@ for element in elements:
         print("Simulation failed")
 
 print("Simulation complete")
+
+def visualize_portal_frame(model, data):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # Plot floor
+    floor_pos = model.geom_pos[0]
+    floor_size = model.geom_size[0]
+    ax.plot_surface(
+        [floor_pos[0]-floor_size[0], floor_pos[0]+floor_size[0]],
+        [floor_pos[1]-floor_size[1], floor_pos[1]+floor_size[1]],
+        [floor_pos[2], floor_pos[2]],
+        alpha=0.5
+    )
+    
+    # Plot columns and beam
+    for i in range(1, 4):  # Assuming 3 bodies: 2 columns and 1 beam
+        pos = data.xpos[i]
+        if i == 2:  # Beam
+            ax.plot([pos[0]-1, pos[0]+1], [pos[1], pos[1]], [pos[2], pos[2]], 'r-', linewidth=5)
+        else:  # Columns
+            ax.plot([pos[0], pos[0]], [pos[1], pos[1]], [pos[2]-1, pos[2]+1], 'b-', linewidth=5)
+    
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.set_title('Portal Frame Visualization')
+    ax.set_xlim(-2, 2)
+    ax.set_ylim(-2, 2)
+    ax.set_zlim(0, 3)
+    plt.show()
+
+# Modify the run_simulation function to visualize the frame
+def run_simulation(model, remove_element=None, steps=1000):
+    print(f"Starting simulation {'without ' + remove_element if remove_element else 'with all elements'}")
+    if remove_element:
+        try:
+            geom_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, remove_element)
+            model.geom_rgba[geom_id] = [0, 0, 0, 0]
+        except Exception as e:
+            print(f"Error removing element {remove_element}: {e}")
+            return None
+
+    data = mujoco.MjData(model)
+
+    try:
+        for step in range(steps):
+            mujoco.mj_step(model, data)
+            
+            # Visualize every 100 steps
+            if step % 100 == 0:
+                visualize_portal_frame(model, data)
+            
+            # Check if structure has fallen (you may need to adjust this threshold)
+            fallen = any(data.qpos[2::7] < 0.5)  # Check z-position of bodies
+            if fallen:
+                print(f"Structure fell after {step} steps")
+                visualize_portal_frame(model, data)  # Visualize the fallen state
+                return True
+
+        print(f"Simulation completed {steps} steps without falling")
+        visualize_portal_frame(model, data)  # Visualize the final state
+        return False
+    except Exception as e:
+        print(f"Error during simulation: {e}")
+        return None
