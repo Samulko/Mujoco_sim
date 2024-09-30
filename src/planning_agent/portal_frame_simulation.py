@@ -7,6 +7,8 @@ import shutil
 import threading
 import numpy as np
 
+global_viewer = None
+
 STRUCTURE_COLLAPSED = False
 initial_positions = {}
 
@@ -83,34 +85,34 @@ def reset_xml():
     print("Reset XML file to original state")
 
 def run_simulation():
-    global STRUCTURE_COLLAPSED
-    viewer = None
+    global STRUCTURE_COLLAPSED, global_viewer
     viewer_thread = None
 
     def run_viewer(model, data, stop_event):
-        nonlocal viewer
+        global global_viewer
         try:
-            viewer = mujoco.viewer.launch(model, data)
-            if viewer is None:
+            global_viewer = mujoco.viewer.launch(model, data)
+            if global_viewer is None:
                 print("Failed to launch MuJoCo viewer. Simulation will run without visualization.")
                 return
         
             def align_view():
-                viewer.cam.lookat[:] = model.stat.center
-                viewer.cam.distance = 10 * model.stat.extent
-                viewer.cam.azimuth = 90
-                viewer.cam.elevation = -20
+                global_viewer.cam.lookat[:] = model.stat.center
+                global_viewer.cam.distance = 10 * model.stat.extent
+                global_viewer.cam.azimuth = 90
+                global_viewer.cam.elevation = -20
 
             align_view()  # Initial alignment
         
-            while not stop_event.is_set() and viewer.is_running():
-                viewer.sync()
+            while not stop_event.is_set() and global_viewer.is_running():
+                global_viewer.sync()
                 time.sleep(0.01)
         except Exception as e:
             print(f"An error occurred in the viewer thread: {e}")
         finally:
-            if viewer:
-                viewer.close()
+            if global_viewer:
+                global_viewer.close()
+                global_viewer = None
 
     try:
         while True:
@@ -118,7 +120,12 @@ def run_simulation():
             model, data = load_model(WORKING_XML_PATH)
             print("\nCurrent model information:")
             print_model_info(model)
-            initialize_positions(model, data)  # Initialize positions for the current model
+            initialize_positions(model, data)
+
+            # Close the previous viewer if it exists
+            if global_viewer:
+                global_viewer.close()
+                global_viewer = None
 
             stop_event = threading.Event()
             viewer_thread = threading.Thread(target=run_viewer, args=(model, data, stop_event))
@@ -133,12 +140,10 @@ def run_simulation():
                 if remove_element(WORKING_XML_PATH, user_input):
                     print(f"Element {user_input} removed. Restarting simulation...")
                     
-                    # Reload the model after removing the element
                     model, data = load_model(WORKING_XML_PATH)
-                    initialize_positions(model, data)  # Reset initial positions
+                    initialize_positions(model, data)
                     
-                    # Run the simulation for a few seconds to allow collapse to occur
-                    for _ in range(500):  # Assuming 100 steps per second, this runs for 5 seconds
+                    for _ in range(500):
                         mujoco.mj_step(model, data)
                         if is_structure_collapsed(model, data):
                             STRUCTURE_COLLAPSED = True
@@ -161,9 +166,9 @@ def run_simulation():
                 viewer_thread.join(timeout=2)
             
             # Ensure the viewer is closed
-            if viewer:
-                viewer.close()
-                viewer = None
+            if global_viewer:
+                global_viewer.close()
+                global_viewer = None
 
     except KeyboardInterrupt:
         print("\nExiting simulation...")
@@ -172,8 +177,8 @@ def run_simulation():
             stop_event.set()
         if viewer_thread and viewer_thread.is_alive():
             viewer_thread.join(timeout=2)
-        if viewer:
-            viewer.close()
+        if global_viewer:
+            global_viewer.close()
         reset_xml()
 
 if __name__ == "__main__":
