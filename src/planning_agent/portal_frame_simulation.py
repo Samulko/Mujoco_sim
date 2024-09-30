@@ -84,18 +84,15 @@ def run_simulation():
 
             user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
             
+            stop_event.set()
+            sim_thread.join()
+
             if user_input.lower() == 'q':
-                stop_event.set()
-                sim_thread.join()
                 break
 
             if user_input in ["column1", "column2", "beam"]:
-                stop_event.set()
-                sim_thread.join()
-
                 if remove_element(WORKING_XML_PATH, user_input):
                     print(f"Element {user_input} removed. Restarting simulation...")
-                    continue  # This will restart the loop, loading the new model and starting a new simulation
                 else:
                     print("Failed to remove element. Continuing with current model.")
             else:
@@ -104,10 +101,6 @@ def run_simulation():
     except KeyboardInterrupt:
         print("\nExiting simulation...")
     finally:
-        if 'stop_event' in locals():
-            stop_event.set()
-        if 'sim_thread' in locals() and sim_thread.is_alive():
-            sim_thread.join()
         reset_xml()
 
 if __name__ == "__main__":
