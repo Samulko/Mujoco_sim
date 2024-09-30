@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 import shutil
 import threading
 
+STRUCTURE_COLLAPSED = False
+
 ORIGINAL_XML_PATH = "portal_frame_original.xml"
 WORKING_XML_PATH = "portal_frame.xml"
 
@@ -35,16 +37,24 @@ def print_model_info(model):
         body_name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, i)
         print(f"Body {i}: {body_name}")
 
+def is_structure_collapsed(data, velocity_threshold=1.0):
+    for i in range(1, data.nbody):  # Start from 1 to skip the world body
+        if any(abs(v) > velocity_threshold for v in data.qvel[6*i:6*i+6]):
+            return True
+    return False
+
 def reset_xml():
     shutil.copy2(ORIGINAL_XML_PATH, WORKING_XML_PATH)
     print("Reset XML file to original state")
 
 def run_simulation():
+    global STRUCTURE_COLLAPSED
     viewer = None
     viewer_thread = None
 
     def run_viewer(model, data, stop_event):
         nonlocal viewer
+        global STRUCTURE_COLLAPSED
         try:
             viewer = mujoco.viewer.launch(model, data)
             if viewer is None:
@@ -61,6 +71,10 @@ def run_simulation():
             
             while not stop_event.is_set() and viewer.is_running():
                 viewer.sync()
+                mujoco.mj_step(model, data)
+                if not STRUCTURE_COLLAPSED and is_structure_collapsed(data):
+                    STRUCTURE_COLLAPSED = True
+                    print("Log: collapsed: true")
                 time.sleep(0.01)
         except Exception as e:
             print(f"An error occurred in the viewer thread: {e}")
@@ -70,6 +84,7 @@ def run_simulation():
 
     try:
         while True:
+            STRUCTURE_COLLAPSED = False
             model, data = load_model(WORKING_XML_PATH)
             print("\nCurrent model information:")
             print_model_info(model)
@@ -91,6 +106,9 @@ def run_simulation():
             if viewer:
                 viewer.close()
                 viewer = None
+
+            if not STRUCTURE_COLLAPSED:
+                print("Log: collapsed: false")
 
             if user_input.lower() == 'q':
                 break
