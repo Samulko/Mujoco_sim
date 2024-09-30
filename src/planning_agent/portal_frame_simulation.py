@@ -81,11 +81,17 @@ def run_simulation():
 
             # Wait for the viewer to be created before accepting input
             viewer_created_event.wait()
+            print("Viewer created, waiting for 2 seconds before prompting for input...")
+            time.sleep(2)  # Give some time for the viewer to stabilize
 
+            print("Prompting for user input...")
             user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
-            
+            print(f"Received user input: {user_input}")
+
             stop_event.set()
+            print("Stopping simulation thread...")
             sim_thread.join()
+            print("Simulation thread stopped.")
 
             if user_input.lower() == 'q':
                 break
