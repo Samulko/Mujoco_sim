@@ -5,10 +5,10 @@
         <body name="column1" pos="-1 0 1">
             <geom name="column1" type="box" size="0.1 0.1 1" rgba="0.8 0.6 0.4 1"/>
         </body>
-        <body name="beam" pos="0 0 2">
-            <geom name="beam" type="box" size="1 0.1 0.1" rgba="0.8 0.6 0.4 1"/>
+        <!-- <body name="beam" pos="0 0 2">
+            <geom name="beam" type="box" size="1 0.1 0.1" rgba="0.8 0.6 0.6 1"/>
             <joint type="free"/>
-        </body>
+        </body> -->
         <body name="column2" pos="1 0 1">
             <geom name="column2" type="box" size="0.1 0.1 1" rgba="0.8 0.6 0.4 1"/>
         </body>
