@@ -4,9 +4,10 @@ import os
 import platform
 import traceback
 
-import matplotlib
-matplotlib.use('TkAgg')  # Use TkAgg backend
+MATPLOTLIB_AVAILABLE = False
 try:
+    import matplotlib
+    matplotlib.use('TkAgg')  # Use TkAgg backend
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
     MATPLOTLIB_AVAILABLE = True
@@ -15,7 +16,6 @@ except ImportError:
     print("matplotlib is not installed. Visualization will be disabled.")
     print("To enable visualization, please install matplotlib using:")
     print("pip install matplotlib")
-    MATPLOTLIB_AVAILABLE = False
 
 print("Python version:", sys.version)
 print("NumPy version:", np.__version__)
