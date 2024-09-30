@@ -39,9 +39,9 @@ def print_model_info(model):
         body_name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, i)
         print(f"Body {i}: {body_name}")
 
-def initialize_positions(data):
+def initialize_positions(model, data):
     global initial_positions
-    initial_positions = {i: data.qpos[7*i:7*i+3].copy() for i in range(1, data.nbody)}
+    initial_positions = {i: data.qpos[7*i:7*i+3].copy() for i in range(1, model.nbody)}
 
 def is_structure_collapsed(data, displacement_threshold=0.5, rotation_threshold=0.5, floor_threshold=0.1):
     for i in range(1, data.nbody):
@@ -119,7 +119,7 @@ def run_simulation():
                     
                     # Reload the model after removing the element
                     model, data = load_model(WORKING_XML_PATH)
-                    initialize_positions(data)  # Reset initial positions
+                    initialize_positions(model, data)  # Reset initial positions
                     
                     # Run the simulation for a few seconds to allow collapse to occur
                     for _ in range(500):  # Assuming 100 steps per second, this runs for 5 seconds
