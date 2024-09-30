@@ -3,8 +3,16 @@ import sys
 import os
 import platform
 import traceback
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+
+try:
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    print("matplotlib is not installed. Visualization will be disabled.")
+    print("To enable visualization, please install matplotlib using:")
+    print("pip install matplotlib")
+    MATPLOTLIB_AVAILABLE = False
 
 print("Python version:", sys.version)
 print("NumPy version:", np.__version__)
@@ -130,6 +138,10 @@ for element in elements:
 print("Simulation complete")
 
 def visualize_portal_frame(model, data):
+    if not MATPLOTLIB_AVAILABLE:
+        print("Visualization skipped: matplotlib is not available.")
+        return
+
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     
