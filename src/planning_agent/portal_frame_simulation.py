@@ -4,6 +4,7 @@ import time
 import os
 import xml.etree.ElementTree as ET
 import shutil
+import threading
 
 ORIGINAL_XML_PATH = "portal_frame_original.xml"
 WORKING_XML_PATH = "portal_frame.xml"
@@ -38,12 +39,30 @@ def reset_xml():
     shutil.copy2(ORIGINAL_XML_PATH, WORKING_XML_PATH)
     print("Reset XML file to original state")
 
+def simulate(model, data, duration):
+    with mujoco.viewer.launch(model, data) as viewer:
+        viewer.cam.azimuth = 90
+        viewer.cam.distance = 5.0
+        viewer.cam.elevation = -20
+        
+        start_time = time.time()
+        while time.time() - start_time < duration and viewer.is_running():
+            step_start = time.time()
+            mujoco.mj_step(model, data)
+            viewer.sync()
+            time_to_sleep = max(0, 0.001 - (time.time() - step_start))
+            time.sleep(time_to_sleep)
+
 def run_simulation():
     try:
         while True:
             model, data = load_model(WORKING_XML_PATH)
             print("\nCurrent model information:")
             print_model_info(model)
+
+            # Start the simulation in a separate thread
+            sim_thread = threading.Thread(target=simulate, args=(model, data, 10))
+            sim_thread.start()
 
             user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
             
@@ -59,19 +78,8 @@ def run_simulation():
             else:
                 print("Invalid input. Please try again.")
 
-            print("Simulating for 10 seconds...")
-            with mujoco.viewer.launch_passive(model, data) as viewer:
-                viewer.cam.azimuth = 90
-                viewer.cam.distance = 5.0
-                viewer.cam.elevation = -20
-                
-                start_time = time.time()
-                while time.time() - start_time < 10 and viewer.is_running():
-                    step_start = time.time()
-                    mujoco.mj_step(model, data)
-                    viewer.sync()
-                    time_to_sleep = max(0, 0.001 - (time.time() - step_start))
-                    time.sleep(time_to_sleep)
+            # Wait for the simulation thread to finish
+            sim_thread.join()
 
     except KeyboardInterrupt:
         print("\nExiting simulation...")
