@@ -74,14 +74,11 @@ def run_simulation():
 
     def run_viewer(model, data, stop_event):
         nonlocal viewer
-        global STRUCTURE_COLLAPSED
         try:
             viewer = mujoco.viewer.launch(model, data)
             if viewer is None:
                 print("Failed to launch MuJoCo viewer. Simulation will run without visualization.")
                 return
-        
-            initialize_positions(data)  # Initialize positions at the start
         
             def align_view():
                 viewer.cam.lookat[:] = model.stat.center
@@ -93,10 +90,6 @@ def run_simulation():
         
             while not stop_event.is_set() and viewer.is_running():
                 viewer.sync()
-                mujoco.mj_step(model, data)
-                if not STRUCTURE_COLLAPSED and is_structure_collapsed(data):
-                    STRUCTURE_COLLAPSED = True
-                    print("Log: collapsed: true")
                 time.sleep(0.01)
         except Exception as e:
             print(f"An error occurred in the viewer thread: {e}")
@@ -115,9 +108,36 @@ def run_simulation():
             viewer_thread = threading.Thread(target=run_viewer, args=(model, data, stop_event))
             viewer_thread.start()
 
-            time.sleep(5)  # Wait for 5 seconds to allow more time for potential collapse
-
             user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
+
+            if user_input.lower() == 'q':
+                break
+
+            if user_input in ["column1", "column2", "beam"]:
+                if remove_element(WORKING_XML_PATH, user_input):
+                    print(f"Element {user_input} removed. Restarting simulation...")
+                    
+                    # Reload the model after removing the element
+                    model, data = load_model(WORKING_XML_PATH)
+                    initialize_positions(data)  # Reset initial positions
+                    
+                    # Run the simulation for a few seconds to allow collapse to occur
+                    for _ in range(500):  # Assuming 100 steps per second, this runs for 5 seconds
+                        mujoco.mj_step(model, data)
+                        if is_structure_collapsed(data):
+                            STRUCTURE_COLLAPSED = True
+                            print("Log: collapsed: true")
+                            break
+                        time.sleep(0.01)
+                    
+                    if not STRUCTURE_COLLAPSED:
+                        print("Log: collapsed: false")
+                else:
+                    print("Failed to remove element. Continuing with current model.")
+            else:
+                print("Invalid input. Please try again.")
+
+            print(f"Debug: STRUCTURE_COLLAPSED = {STRUCTURE_COLLAPSED}")
 
             # Close the viewer and stop the thread
             stop_event.set()
@@ -128,21 +148,6 @@ def run_simulation():
             if viewer:
                 viewer.close()
                 viewer = None
-
-            print(f"Debug: STRUCTURE_COLLAPSED = {STRUCTURE_COLLAPSED}")
-            if not STRUCTURE_COLLAPSED:
-                print("Log: collapsed: false")
-
-            if user_input.lower() == 'q':
-                break
-
-            if user_input in ["column1", "column2", "beam"]:
-                if remove_element(WORKING_XML_PATH, user_input):
-                    print(f"Element {user_input} removed. Restarting simulation...")
-                else:
-                    print("Failed to remove element. Continuing with current model.")
-            else:
-                print("Invalid input. Please try again.")
 
     except KeyboardInterrupt:
         print("\nExiting simulation...")
