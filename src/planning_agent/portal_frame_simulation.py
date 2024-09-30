@@ -75,50 +75,36 @@ def run_simulation():
             print_model_info(model)
 
             stop_event = threading.Event()
-            viewer_created_event = threading.Event()
-            sim_thread = threading.Thread(target=simulate, args=(model, data, viewer_created_event, stop_event))
+            sim_thread = threading.Thread(target=simulate, args=(model, data, float('inf'), stop_event))
             sim_thread.start()
 
-            # Wait for the viewer to be created before accepting input
-            viewer_created_event.wait()
-            print("Viewer created, waiting for 2 seconds before prompting for input...")
-            time.sleep(2)  # Give some time for the viewer to stabilize
-
-            print("Prompting for user input...")
-            try:
-                user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
-                print(f"Received user input: {user_input}")
-            except EOFError:
-                print("\nEOF detected. Exiting simulation...")
-                break
-
-            stop_event.set()
-            print("Stopping simulation thread...")
-            sim_thread.join(timeout=5)  # Wait for up to 5 seconds
-            if sim_thread.is_alive():
-                print("Warning: Simulation thread did not stop in time.")
-            else:
-                print("Simulation thread stopped.")
-
+            user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
+            
             if user_input.lower() == 'q':
+                stop_event.set()
+                sim_thread.join()
                 break
 
             if user_input in ["column1", "column2", "beam"]:
+                stop_event.set()
+                sim_thread.join()
+
                 if remove_element(WORKING_XML_PATH, user_input):
                     print(f"Element {user_input} removed. Restarting simulation...")
+                    continue  # This will restart the loop, loading the new model and starting a new simulation
                 else:
                     print("Failed to remove element. Continuing with current model.")
             else:
                 print("Invalid input. Please try again.")
 
-            # Reload the model after removal attempt
-            model, data = load_model(WORKING_XML_PATH)
-
     except KeyboardInterrupt:
         print("\nExiting simulation...")
     finally:
+        if 'stop_event' in locals():
+            stop_event.set()
+        if 'sim_thread' in locals() and sim_thread.is_alive():
+            sim_thread.join()
         reset_xml()
-        print("Simulation ended.")
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
