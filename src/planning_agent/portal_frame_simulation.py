@@ -39,14 +39,14 @@ def reset_xml():
     shutil.copy2(ORIGINAL_XML_PATH, WORKING_XML_PATH)
     print("Reset XML file to original state")
 
-def simulate(model, data, duration):
+def simulate(model, data, duration, stop_event):
     with mujoco.viewer.launch(model, data) as viewer:
         viewer.cam.azimuth = 90
         viewer.cam.distance = 5.0
         viewer.cam.elevation = -20
         
         start_time = time.time()
-        while time.time() - start_time < duration and viewer.is_running():
+        while time.time() - start_time < duration and viewer.is_running() and not stop_event.is_set():
             step_start = time.time()
             mujoco.mj_step(model, data)
             viewer.sync()
@@ -60,12 +60,15 @@ def run_simulation():
             print("\nCurrent model information:")
             print_model_info(model)
 
-            # Start the simulation in a separate thread
-            sim_thread = threading.Thread(target=simulate, args=(model, data, 10))
+            stop_event = threading.Event()
+            sim_thread = threading.Thread(target=simulate, args=(model, data, 10, stop_event))
             sim_thread.start()
 
             user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
             
+            stop_event.set()  # Signal the simulation thread to stop
+            sim_thread.join()  # Wait for the simulation thread to finish
+
             if user_input.lower() == 'q':
                 break
             
@@ -77,9 +80,6 @@ def run_simulation():
                     print("Failed to remove element. Continuing with current model.")
             else:
                 print("Invalid input. Please try again.")
-
-            # Wait for the simulation thread to finish
-            sim_thread.join()
 
     except KeyboardInterrupt:
         print("\nExiting simulation...")
