@@ -39,7 +39,7 @@ def reset_xml():
     shutil.copy2(ORIGINAL_XML_PATH, WORKING_XML_PATH)
     print("Reset XML file to original state")
 
-def simulate(model, data, duration, stop_event):
+def simulate(model, data, viewer_created_event, stop_event):
     try:
         viewer = mujoco.viewer.launch(model, data)
         if viewer is None:
@@ -53,9 +53,9 @@ def simulate(model, data, duration, stop_event):
             viewer.cam.elevation = -20
 
         align_view()  # Initial alignment
+        viewer_created_event.set()  # Signal that the viewer has been created
         
-        start_time = time.time()
-        while time.time() - start_time < duration and viewer.is_running() and not stop_event.is_set():
+        while viewer.is_running() and not stop_event.is_set():
             step_start = time.time()
             mujoco.mj_step(model, data)
             viewer.sync()
@@ -75,8 +75,12 @@ def run_simulation():
             print_model_info(model)
 
             stop_event = threading.Event()
-            sim_thread = threading.Thread(target=simulate, args=(model, data, float('inf'), stop_event))
+            viewer_created_event = threading.Event()
+            sim_thread = threading.Thread(target=simulate, args=(model, data, viewer_created_event, stop_event))
             sim_thread.start()
+
+            # Wait for the viewer to be created before accepting input
+            viewer_created_event.wait()
 
             user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
             
