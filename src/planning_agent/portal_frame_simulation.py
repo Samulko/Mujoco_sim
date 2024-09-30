@@ -40,16 +40,32 @@ def reset_xml():
 
 def run_simulation():
     try:
-        while True:
-            model, data = load_model(WORKING_XML_PATH)
-            print("\nCurrent model information:")
-            print_model_info(model)
+        model, data = load_model(WORKING_XML_PATH)
+        with mujoco.viewer.launch_passive(model, data) as viewer:
+            viewer.cam.azimuth = 90
+            viewer.cam.distance = 5.0
+            viewer.cam.elevation = -20
 
-            with mujoco.viewer.launch_passive(model, data) as viewer:
-                viewer.cam.azimuth = 90
-                viewer.cam.distance = 5.0
-                viewer.cam.elevation = -20
+            while viewer.is_running():
+                print("\nCurrent model information:")
+                print_model_info(model)
 
+                user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
+                
+                if user_input.lower() == 'q':
+                    break
+                
+                if user_input in ["column1", "column2", "beam"]:
+                    if remove_element(WORKING_XML_PATH, user_input):
+                        print(f"Element {user_input} removed. Restarting simulation...")
+                        model, data = load_model(WORKING_XML_PATH)
+                        viewer.load_model(model)
+                    else:
+                        print("Failed to remove element. Continuing with current model.")
+                else:
+                    print("Invalid input. Please try again.")
+
+                print("Simulating for 10 seconds...")
                 start_time = time.time()
                 while time.time() - start_time < 10 and viewer.is_running():
                     step_start = time.time()
@@ -57,19 +73,6 @@ def run_simulation():
                     viewer.sync()
                     time_to_sleep = max(0, 0.001 - (time.time() - step_start))
                     time.sleep(time_to_sleep)
-
-            user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
-            
-            if user_input.lower() == 'q':
-                break
-            
-            if user_input in ["column1", "column2", "beam"]:
-                if remove_element(WORKING_XML_PATH, user_input):
-                    print(f"Element {user_input} removed. Restarting simulation...")
-                else:
-                    print("Failed to remove element. Continuing with current model.")
-            else:
-                print("Invalid input. Please try again.")
 
     except KeyboardInterrupt:
         print("\nExiting simulation...")
