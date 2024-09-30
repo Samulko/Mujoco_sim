@@ -40,11 +40,12 @@ def reset_xml():
     print("Reset XML file to original state")
 
 def simulate(model, data, viewer_created_event, stop_event):
+    viewer = None
     try:
         viewer = mujoco.viewer.launch(model, data)
         if viewer is None:
             print("Failed to launch MuJoCo viewer. Simulation will run without visualization.")
-            return
+            return None
 
         def align_view():
             viewer.cam.lookat[:] = model.stat.center
@@ -64,8 +65,7 @@ def simulate(model, data, viewer_created_event, stop_event):
     except Exception as e:
         print(f"An error occurred during simulation: {e}")
     finally:
-        if 'viewer' in locals() and viewer is not None:
-            viewer.close()
+        return viewer
 
 def run_simulation():
     try:
@@ -75,20 +75,26 @@ def run_simulation():
             print_model_info(model)
 
             stop_event = threading.Event()
-            sim_thread = threading.Thread(target=simulate, args=(model, data, float('inf'), stop_event))
+            viewer_created_event = threading.Event()
+            sim_thread = threading.Thread(target=simulate, args=(model, data, viewer_created_event, stop_event))
             sim_thread.start()
+
+            viewer_created_event.wait()  # Wait for the viewer to be created
 
             user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
             
+            stop_event.set()
+            sim_thread.join()
+            
+            # Close the viewer
+            viewer = sim_thread._target(*sim_thread._args)
+            if viewer:
+                viewer.close()
+
             if user_input.lower() == 'q':
-                stop_event.set()
-                sim_thread.join()
                 break
 
             if user_input in ["column1", "column2", "beam"]:
-                stop_event.set()
-                sim_thread.join()
-
                 if remove_element(WORKING_XML_PATH, user_input):
                     print(f"Element {user_input} removed. Restarting simulation...")
                     continue  # This will restart the loop, loading the new model and starting a new simulation
@@ -100,10 +106,6 @@ def run_simulation():
     except KeyboardInterrupt:
         print("\nExiting simulation...")
     finally:
-        if 'stop_event' in locals():
-            stop_event.set()
-        if 'sim_thread' in locals() and sim_thread.is_alive():
-            sim_thread.join()
         reset_xml()
 
 if __name__ == "__main__":
