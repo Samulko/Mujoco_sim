@@ -57,21 +57,18 @@ def run_simulation():
                 viewer.sync()
 
                 current_time = time.time()
-                if current_time - last_input_time >= 1.0:
+                if current_time - last_input_time >= 5.0:  # Check for input every 5 seconds
                     user_input = input("Enter element to remove (column1, column2, beam) or press Enter to continue: ")
                     if user_input in ["column1", "column2", "beam"]:
                         if remove_element(WORKING_XML_PATH, user_input):
                             model, data = load_model(WORKING_XML_PATH)
-                            viewer.close()
-                            viewer = mujoco.viewer.launch_passive(model, data)
-                            viewer.cam.azimuth = 90
-                            viewer.cam.distance = 5.0
-                            viewer.cam.elevation = -20
+                            viewer.update_model(model)
                             print("Model information after removal:")
                             print_model_info(model)
+                            time.sleep(1)  # Allow time for physics to stabilize
                     last_input_time = current_time
 
-                time_to_sleep = max(0, 0.01 - (time.time() - step_start))
+                time_to_sleep = max(0, 0.001 - (time.time() - step_start))
                 time.sleep(time_to_sleep)
     except KeyboardInterrupt:
         print("\nExiting simulation...")
