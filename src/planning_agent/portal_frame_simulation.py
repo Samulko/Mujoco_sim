@@ -78,36 +78,30 @@ def run_simulation():
             sim_thread = threading.Thread(target=simulate, args=(model, data, float('inf'), stop_event))
             sim_thread.start()
 
-            while True:
-                user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
-                
-                if user_input.lower() == 'q':
-                    stop_event.set()
-                    sim_thread.join()
-                    return
+            user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
+            
+            if user_input.lower() == 'q':
+                stop_event.set()
+                sim_thread.join()
+                break
 
-                if user_input in ["column1", "column2", "beam"]:
-                    stop_event.set()
-                    sim_thread.join()
+            if user_input in ["column1", "column2", "beam"]:
+                stop_event.set()
+                sim_thread.join()
 
-                    if remove_element(WORKING_XML_PATH, user_input):
-                        print(f"Element {user_input} removed. Restarting simulation...")
-                        break  # Break the inner loop to restart simulation
-                    else:
-                        print("Failed to remove element. Continuing with current model.")
-                        
-                    # Restart simulation
-                    model, data = load_model(WORKING_XML_PATH)
-                    stop_event = threading.Event()
-                    sim_thread = threading.Thread(target=simulate, args=(model, data, float('inf'), stop_event))
-                    sim_thread.start()
+                if remove_element(WORKING_XML_PATH, user_input):
+                    print(f"Element {user_input} removed. Restarting simulation...")
                 else:
-                    print("Invalid input. Please try again.")
+                    print("Failed to remove element. Continuing with current model.")
+            else:
+                print("Invalid input. Please try again.")
+                continue
 
     except KeyboardInterrupt:
         print("\nExiting simulation...")
     finally:
-        stop_event.set()
+        if 'stop_event' in locals():
+            stop_event.set()
         if 'sim_thread' in locals() and sim_thread.is_alive():
             sim_thread.join()
         reset_xml()
