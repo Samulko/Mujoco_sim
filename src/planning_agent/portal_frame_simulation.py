@@ -4,10 +4,13 @@ import os
 import platform
 import traceback
 
+import matplotlib
+matplotlib.use('TkAgg')  # Use TkAgg backend
 try:
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
     MATPLOTLIB_AVAILABLE = True
+    print("matplotlib is available. Visualization will be enabled.")
 except ImportError:
     print("matplotlib is not installed. Visualization will be disabled.")
     print("To enable visualization, please install matplotlib using:")
@@ -142,6 +145,8 @@ def visualize_portal_frame(model, data):
         print("Visualization skipped: matplotlib is not available.")
         return
 
+    plt.ion()  # Turn on interactive mode
+    plt.clf()  # Clear the current figure
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     
@@ -170,7 +175,8 @@ def visualize_portal_frame(model, data):
     ax.set_xlim(-2, 2)
     ax.set_ylim(-2, 2)
     ax.set_zlim(0, 3)
-    plt.show()
+    plt.draw()
+    plt.pause(0.001)  # Pause to update the plot
 
 # Modify the run_simulation function to visualize the frame
 def run_simulation(model, remove_element=None, steps=1000):
@@ -190,18 +196,22 @@ def run_simulation(model, remove_element=None, steps=1000):
             mujoco.mj_step(model, data)
             
             # Visualize every 100 steps
-            if step % 100 == 0:
+            if step % 100 == 0 and MATPLOTLIB_AVAILABLE:
                 visualize_portal_frame(model, data)
             
             # Check if structure has fallen (you may need to adjust this threshold)
             fallen = any(data.qpos[2::7] < 0.5)  # Check z-position of bodies
             if fallen:
                 print(f"Structure fell after {step} steps")
-                visualize_portal_frame(model, data)  # Visualize the fallen state
+                if MATPLOTLIB_AVAILABLE:
+                    visualize_portal_frame(model, data)  # Visualize the fallen state
+                    plt.show(block=True)  # Keep the plot open
                 return True
 
         print(f"Simulation completed {steps} steps without falling")
-        visualize_portal_frame(model, data)  # Visualize the final state
+        if MATPLOTLIB_AVAILABLE:
+            visualize_portal_frame(model, data)  # Visualize the final state
+            plt.show(block=True)  # Keep the plot open
         return False
     except Exception as e:
         print(f"Error during simulation: {e}")
