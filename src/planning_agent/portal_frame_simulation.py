@@ -43,7 +43,7 @@ def run_simulation():
         model, data = load_model(WORKING_XML_PATH)
         with mujoco.viewer.launch_passive(model, data) as viewer:
             viewer.cam.azimuth = 90
-            viewer.cam.distance = 5.0
+            viewer.cam.distance = 10.0
             viewer.cam.elevation = -20
 
             while viewer.is_running():
