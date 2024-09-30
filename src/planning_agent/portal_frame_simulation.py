@@ -8,6 +8,7 @@ import threading
 import numpy as np
 
 global_viewer = None
+stop_event = threading.Event()
 
 STRUCTURE_COLLAPSED = False
 initial_positions = {}
@@ -19,6 +20,16 @@ def load_model(xml_path):
     model = mujoco.MjModel.from_xml_path(xml_path)
     data = mujoco.MjData(model)
     return model, data
+
+def close_viewer():
+    global global_viewer
+    stop_event.set()
+    if 'viewer_thread' in globals() and viewer_thread and viewer_thread.is_alive():
+        viewer_thread.join(timeout=5)
+    if global_viewer and global_viewer.is_running():
+        global_viewer.close()
+    global_viewer = None
+    stop_event.clear()
 
 def remove_element(xml_path, element_name):
     tree = ET.parse(xml_path)
@@ -85,17 +96,16 @@ def reset_xml():
     print("Reset XML file to original state")
 
 def run_simulation():
-    global STRUCTURE_COLLAPSED, global_viewer
-    viewer_thread = None
+    global STRUCTURE_COLLAPSED, global_viewer, viewer_thread
 
-    def run_viewer(model, data, stop_event):
+    def run_viewer(model, data):
         global global_viewer
         try:
             global_viewer = mujoco.viewer.launch(model, data)
             if global_viewer is None:
                 print("Failed to launch MuJoCo viewer. Simulation will run without visualization.")
                 return
-        
+            
             def align_view():
                 global_viewer.cam.lookat[:] = model.stat.center
                 global_viewer.cam.distance = 10 * model.stat.extent
@@ -103,16 +113,16 @@ def run_simulation():
                 global_viewer.cam.elevation = -20
 
             align_view()  # Initial alignment
-        
+            
             while not stop_event.is_set() and global_viewer.is_running():
                 global_viewer.sync()
                 time.sleep(0.01)
         except Exception as e:
             print(f"An error occurred in the viewer thread: {e}")
         finally:
-            if global_viewer:
+            if global_viewer and global_viewer.is_running():
                 global_viewer.close()
-                global_viewer = None
+            global_viewer = None
 
     try:
         while True:
@@ -122,13 +132,9 @@ def run_simulation():
             print_model_info(model)
             initialize_positions(model, data)
 
-            # Close the previous viewer if it exists
-            if global_viewer:
-                global_viewer.close()
-                global_viewer = None
+            close_viewer()  # Ensure previous viewer is closed
 
-            stop_event = threading.Event()
-            viewer_thread = threading.Thread(target=run_viewer, args=(model, data, stop_event))
+            viewer_thread = threading.Thread(target=run_viewer, args=(model, data))
             viewer_thread.start()
 
             user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
@@ -160,25 +166,12 @@ def run_simulation():
 
             print(f"Debug: STRUCTURE_COLLAPSED = {STRUCTURE_COLLAPSED}")
 
-            # Close the viewer and stop the thread
-            stop_event.set()
-            if viewer_thread:
-                viewer_thread.join(timeout=2)
-            
-            # Ensure the viewer is closed
-            if global_viewer:
-                global_viewer.close()
-                global_viewer = None
+            close_viewer()  # Close viewer after each simulation step
 
     except KeyboardInterrupt:
         print("\nExiting simulation...")
     finally:
-        if 'stop_event' in locals():
-            stop_event.set()
-        if viewer_thread and viewer_thread.is_alive():
-            viewer_thread.join(timeout=2)
-        if global_viewer:
-            global_viewer.close()
+        close_viewer()
         reset_xml()
 
 if __name__ == "__main__":
