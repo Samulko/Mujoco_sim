@@ -6,18 +6,16 @@ import os
 def run_simulation():
     # Load the model from the XML file
     xml_path = "portal_frame.xml"
+    model = mujoco.MjModel.from_xml_path(xml_path)
+    data = mujoco.MjData(model)
     
-    # Create a viewer
-    with mujoco.viewer.launch_passive(xml_path) as viewer:
-        # Get the model and data from the viewer
-        model = viewer.model
-        data = viewer.data
-        
-        # Set more realistic simulation parameters
-        model.opt.gravity[2] = -9.81  # Ensure gravity is set correctly
-        model.opt.timestep = 0.002    # Smaller timestep for more accurate simulation
-        model.opt.integrator = 0      # Use semi-implicit Euler integrator for stability
+    # Set more realistic simulation parameters
+    model.opt.gravity[2] = -9.81  # Ensure gravity is set correctly
+    model.opt.timestep = 0.002    # Smaller timestep for more accurate simulation
+    model.opt.integrator = 0      # Use semi-implicit Euler integrator for stability
 
+    # Create a viewer
+    with mujoco.viewer.launch_passive(model, data) as viewer:
         # Run the simulation indefinitely
         while True:
             # Step the simulation
