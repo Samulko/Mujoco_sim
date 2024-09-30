@@ -8,15 +8,12 @@ xml = """
     <worldbody>
         <geom name="floor" pos="0 0 0" size="5 5 0.1" type="plane" rgba="0.8 0.9 0.8 1"/>
         <body name="column1" pos="-1 0 1">
-            <joint type="fixed"/>
             <geom name="column1" type="box" size="0.1 0.1 1" rgba="0.8 0.6 0.4 1"/>
         </body>
-        <body name="beam" pos="0 0 2">
-            <joint type="fixed"/>
+        <body name="beam" pos="0 0 2.1">
             <geom name="beam" type="box" size="1.1 0.1 0.1" rgba="0.8 0.6 0.4 1"/>
         </body>
         <body name="column2" pos="1 0 1">
-            <joint type="fixed"/>
             <geom name="column2" type="box" size="0.1 0.1 1" rgba="0.8 0.6 0.4 1"/>
         </body>
     </worldbody>
