@@ -40,10 +40,19 @@ def reset_xml():
     print("Reset XML file to original state")
 
 def simulate(model, data, duration, stop_event):
-    with mujoco.viewer.launch(model, data) as viewer:
-        viewer.cam.azimuth = 90
-        viewer.cam.distance = 5.0
-        viewer.cam.elevation = -20
+    try:
+        viewer = mujoco.viewer.launch(model, data)
+        if viewer is None:
+            print("Failed to launch MuJoCo viewer. Simulation will run without visualization.")
+            return
+
+        def align_view():
+            viewer.cam.lookat[:] = model.stat.center
+            viewer.cam.distance = 1.5 * model.stat.extent
+            viewer.cam.azimuth = 90
+            viewer.cam.elevation = -20
+
+        align_view()  # Initial alignment
         
         start_time = time.time()
         while time.time() - start_time < duration and viewer.is_running() and not stop_event.is_set():
@@ -52,6 +61,11 @@ def simulate(model, data, duration, stop_event):
             viewer.sync()
             time_to_sleep = max(0, 0.001 - (time.time() - step_start))
             time.sleep(time_to_sleep)
+    except Exception as e:
+        print(f"An error occurred during simulation: {e}")
+    finally:
+        if 'viewer' in locals() and viewer is not None:
+            viewer.close()
 
 def run_simulation():
     try:
@@ -61,29 +75,41 @@ def run_simulation():
             print_model_info(model)
 
             stop_event = threading.Event()
-            sim_thread = threading.Thread(target=simulate, args=(model, data, 10, stop_event))
+            sim_thread = threading.Thread(target=simulate, args=(model, data, float('inf'), stop_event))
             sim_thread.start()
 
-            user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
-            
-            stop_event.set()  # Signal the simulation thread to stop
-            sim_thread.join()  # Wait for the simulation thread to finish
+            while True:
+                user_input = input("\nEnter element to remove (column1, column2, beam) or 'q' to quit: ")
+                
+                if user_input.lower() == 'q':
+                    stop_event.set()
+                    sim_thread.join()
+                    return
 
-            if user_input.lower() == 'q':
-                break
-            
-            if user_input in ["column1", "column2", "beam"]:
-                if remove_element(WORKING_XML_PATH, user_input):
-                    print(f"Element {user_input} removed. Restarting simulation...")
+                if user_input in ["column1", "column2", "beam"]:
+                    stop_event.set()
+                    sim_thread.join()
+
+                    if remove_element(WORKING_XML_PATH, user_input):
+                        print(f"Element {user_input} removed. Restarting simulation...")
+                        break  # Break the inner loop to restart simulation
+                    else:
+                        print("Failed to remove element. Continuing with current model.")
+                        
+                    # Restart simulation
                     model, data = load_model(WORKING_XML_PATH)
+                    stop_event = threading.Event()
+                    sim_thread = threading.Thread(target=simulate, args=(model, data, float('inf'), stop_event))
+                    sim_thread.start()
                 else:
-                    print("Failed to remove element. Continuing with current model.")
-            else:
-                print("Invalid input. Please try again.")
+                    print("Invalid input. Please try again.")
 
     except KeyboardInterrupt:
         print("\nExiting simulation...")
     finally:
+        stop_event.set()
+        if 'sim_thread' in locals() and sim_thread.is_alive():
+            sim_thread.join()
         reset_xml()
 
 if __name__ == "__main__":
