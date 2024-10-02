@@ -14,5 +14,5 @@
             <freejoint/>
             <geom name="beam" type="box" size="1.1 0.1 0.1" rgba="0.8 0.6 0.6 1" />
         </body>
-    </worldbody>
+    </worldbody>q
 </mujoco>

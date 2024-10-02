@@ -50,8 +50,8 @@ class PlanningAgent:
         # Translate plan into structured action sequences
         action_sequence = self.translate_plan(plan)
 
-        if action_sequence is None:/
-        return False, "Failed to generate a valid action sequence."
+        if action_sequence is None:
+            return False, "Failed to generate a valid action sequence."
 
         # Validate action sequence
         if self.validate_action_sequence(action_sequence):
@@ -138,9 +138,9 @@ class PlanningAgent:
         """
         try:
             action_sequence = self.client.chat.completions.create(
-                model="gpt-4o-2024-08-06",
+                model="gpt-4o",
                 response_model=ActionSequence,
-                temperature=0.6,  # Add this line to set the temperature (value between 0 and 2)
+                temperature=0,  # Add this line to set the temperature (value between 0 and 2)
                 messages=[
                     {"role": "system", "content": "You are a planning agent that translates disassembly plans into structured action sequences."},
                     {"role": "user", "content": prompt}
@@ -218,8 +218,8 @@ def main():
 
     Disassembly Instructions:
     1. actor_1 supports the beam (element 2) to secure the structure.
-    2. actor_2 removes the vertical column (1) from below the beam (2), which is being supported continuously by the actor_1.
-    3. actor_2 removes the vertical column (3) from below the beam (2), which is being supported continuously by the actor_1.
+    2. actor_2 removes the vertical column (1) from below the beam (2).
+    3. actor_2 removes the vertical column (3) from below the beam (2).
     4. Finally, actor_1 carefully removes the beam (2) that is being supported last and places it in the deposition zone.
     
     -I, the human, will remove column 1.
