@@ -9,10 +9,10 @@ import time
 from typing import List
 import instructor
 from instructor import OpenAISchema
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
+from langchain_community.chat_models import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains import LLMChain
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -47,7 +47,7 @@ class PlanningAgent:
         }
 
         # Initialize LangChain components
-        self.llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
+        self.llm = ChatOpenAI(model_name="gpt-4", temperature=0)
         self.output_parser = PydanticOutputParser(pydantic_object=ActionSequence)
 
         logging.info("Planning Agent Initialized and ready to work.")
@@ -116,9 +116,10 @@ class PlanningAgent:
             "- Set human_working to true for steps performed by humans, and false for steps performed by the robot.\n"
             "- When human_working is true, only include human_action in the planning_sequence.\n"
             "- When human_working is false, only include robot actions in the planning_sequence.\n"
-            "- Ensure that each actor maintains their assigned role throughout the entire process as specified in the numbered instructions.\n\n"
+            "- Ensure that each actor maintains their assigned role throughout the entire process as specified in the numbered instructions.\n"
+            "- Pay special attention to any instructions about human involvement, such as 'I, the human, will remove column 1.'\n\n"
             "Ensure that:\n"
-            "1. 'human_working' is set appropriately based on whether the action is performed by a human or the robot, as specified in the numbered instructions.\n"
+            "1. 'human_working' is set appropriately based on whether the action is performed by a human or the robot, as specified in the numbered instructions and any additional comments.\n"
             "2. 'selected_element' specifies the element being worked on in the current step.\n"
             "3. The actions in the 'planning_sequence' are organized in execution order.\n"
             "4. Robot pick-and-place sequences follow this pattern: moveto -> picking -> holding -> placing\n"
