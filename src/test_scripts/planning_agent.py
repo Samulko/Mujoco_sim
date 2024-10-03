@@ -47,7 +47,7 @@ class PlanningAgent:
         }
 
         # Initialize LangChain components
-        self.llm = ChatOpenAI(model_name="gpt-4", temperature=0)
+        self.llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
         self.output_parser = PydanticOutputParser(pydantic_object=ActionSequence)
 
         logging.info("Planning Agent Initialized and ready to work.")
