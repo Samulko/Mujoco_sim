@@ -43,7 +43,8 @@ class PlanningAgent:
             "picking": "picking",
             "holding": "holding",
             "placing": "placing",
-            "human_action": "human_action(action_description)"
+            "human_action": "human_action(action_description)",
+            "support": "support"
         }
 
         # Initialize LangChain components
@@ -93,6 +94,23 @@ class PlanningAgent:
         logging.info(f"Planning Agent: Translating plan: {plan}")
         action_schemas = ', '.join(f"{key}: {value}" for key, value in self.robot_actions.items())
         
+        example_json = '''
+        {
+          "actions": [
+            {
+              "human_working": false,
+              "selected_element": "element_2",
+              "planning_sequence": ["moveto", "holding"]
+            },
+            {
+              "human_working": true,
+              "selected_element": "element_1",
+              "planning_sequence": ["human_action(remove column 1)"]
+            }
+          ]
+        }
+        '''
+        
         # Step 1: Initial translation
         initial_translation_prompt = ChatPromptTemplate.from_template(
             "You are the Planning Agent in a multi-agent system that controls a robotic arm for disassembly tasks. "
@@ -127,6 +145,7 @@ class PlanningAgent:
             "5. Support actions follow this pattern: moveto -> holding, and continue holding in subsequent steps\n"
             "6. Use 'deposition_zone' as the destination for removed elements.\n"
             "7. Each actor maintains their assigned role consistently throughout the entire sequence as per the numbered instructions.\n\n"
+            "Here's an example of the correct JSON format:\n{example_json}\n\n"
             "Translate the plan into a structured action sequence:\n\n{format_instructions}"
         )
         
@@ -135,6 +154,7 @@ class PlanningAgent:
         initial_result = initial_chain.run(
             plan=plan,
             action_schemas=action_schemas,
+            example_json=example_json,
             format_instructions=self.output_parser.get_format_instructions()
         )
         
