@@ -271,7 +271,7 @@ def main():
     3. actor_2 removes the vertical column (3) from below the beam (2).
     4. Finally, actor_1 carefully removes the beam (2) that is being supported last and places it in the deposition zone.
     
-    -The robot will be supporting element 2.
+    -The robot will be removing the columns.
     """
     success, details = planning_agent.handle_plan_execution(plan)
     if success:
