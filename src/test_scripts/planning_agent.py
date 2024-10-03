@@ -47,7 +47,7 @@ class PlanningAgent:
         }
 
         # Initialize LangChain components
-        self.llm = ChatOpenAI(model_name="gpt-4", temperature=0)
+        self.llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
         self.output_parser = PydanticOutputParser(pydantic_object=ActionSequence)
 
         logging.info("Planning Agent Initialized and ready to work.")
@@ -109,7 +109,6 @@ class PlanningAgent:
             "Guidelines:\n"
             "- Prioritize the numbered Disassembly Instructions over any additional comments or information provided.\n"
             "- Follow the disassembly instructions step by step, without changing the order or assigned roles.\n"
-            "- Break down complex movements into a series of simpler actions.\n"
             "- Include necessary preparatory movements before each main action.\n"
             "- For human actions, use the format: human_action(action_description)\n"
             "- Use specific element names (e.g., 'element_1' instead of 'element 1') for consistency.\n"
@@ -158,40 +157,10 @@ class PlanningAgent:
         
         # Step 3: Final validation
         validation_prompt = ChatPromptTemplate.from_template(
-            "You are the Planning Agent in a multi-agent system that controls a robotic arm for disassembly tasks. "
-            "Your role is to translate the disassembly sequence plan into a structured action sequence for the robotic arm to execute, "
-            "collaborating with a human operator.\n\n"
             "Given the original plan and the analyzed action sequence, provide a final, corrected action sequence "
             "that strictly adheres to the numbered Disassembly Instructions and maintains consistent actor roles:\n\n"
             "Original Plan:\n{plan}\n\n"
             "Analyzed Action Sequence:\n{analyzed_sequence}\n\n"
-            "Your task is to:\n"
-            "1. Analyze the given disassembly plan, focusing primarily on the numbered Disassembly Instructions.\n"
-            "2. Create a detailed action sequence using only the following action schemas:\n{action_schemas}\n"
-            "3. Ensure the action sequence follows the EXACT order specified in the numbered Disassembly Instructions.\n"
-            "4. Maintain consistent roles for each actor throughout the entire process as defined in the numbered instructions.\n"
-            "5. Identify the specific element being worked on in each step.\n"
-            "6. Ensure that if an actor is instructed to support an element, they continue to do so until explicitly instructed to release it.\n\n"
-            "Guidelines:\n"
-            "- Prioritize the numbered Disassembly Instructions over any additional comments or information provided.\n"
-            "- Follow the disassembly instructions step by step, without changing the order or assigned roles.\n"
-            "- Break down complex movements into a series of simpler actions.\n"
-            "- Include necessary preparatory movements before each main action.\n"
-            "- For human actions, use the format: human_action(action_description)\n"
-            "- Use specific element names (e.g., 'element_1' instead of 'element 1') for consistency.\n"
-            "- Use EXACTLY the action names provided (e.g., 'moveto' not 'move_to').\n"
-            "- Set human_working to true for steps performed by humans, and false for steps performed by the robot.\n"
-            "- When human_working is true, only include human_action in the planning_sequence.\n"
-            "- When human_working is false, only include robot actions in the planning_sequence.\n"
-            "- Ensure that each actor maintains their assigned role throughout the entire process as specified in the numbered instructions.\n\n"
-            "Ensure that:\n"
-            "1. 'human_working' is set appropriately based on whether the action is performed by a human or the robot, as specified in the numbered instructions.\n"
-            "2. 'selected_element' specifies the element being worked on in the current step.\n"
-            "3. The actions in the 'planning_sequence' are organized in execution order.\n"
-            "4. Robot pick-and-place sequences follow this pattern: moveto -> picking -> holding -> placing\n"
-            "5. Support actions follow this pattern: moveto -> holding, and continue holding in subsequent steps\n"
-            "6. Use 'deposition_zone' as the destination for removed elements.\n"
-            "7. Each actor maintains their assigned role consistently throughout the entire sequence as per the numbered instructions.\n\n"
             "Provide the final, corrected action sequence using the following format:\n"
             "{format_instructions}"
         )
