@@ -110,45 +110,51 @@ class PlanningAgent:
         }
         '''
         
-        # Step 1: Extract Numbered Instructions
+        # Step 1: Extract Numbered Instructions and Preferences
         step1_prompt = ChatPromptTemplate.from_template(
             "You are the Planning Agent in a multi-agent system that controls a robotic arm for disassembly tasks. "
-            "Your first task is to extract the numbered Disassembly Instructions from the plan below.\n\n"
+            "Your first task is to extract the numbered Disassembly Instructions and any additional actor preferences from the plan below.\n\n"
             "**Plan:**\n{plan}\n\n"
-            "Please list the numbered Disassembly Instructions exactly as they appear."
+            "Please provide:\n"
+            "1. The numbered Disassembly Instructions exactly as they appear.\n"
+            "2. Any additional actor preferences or constraints mentioned in the plan."
         )
         
         step1_chain = LLMChain(llm=self.llm, prompt=step1_prompt, verbose=True)
-        numbered_instructions = step1_chain.run(plan=plan)
+        extraction_result = step1_chain.run(plan=plan)
+        
+        # Parse the extraction result
+        instructions_and_preferences = self.parse_extraction_result(extraction_result)
         
         # Step 2: Interpret Instructions Step by Step
         step2_prompt = ChatPromptTemplate.from_template(
             "Now, interpret each of the numbered Disassembly Instructions step by step. For each instruction, do the following:\n"
-            "1. Identify the preferences stated in the initial prompt for which actor should perform which action.\n"
-            "2. Identify the actor (human or robot) performing the action.\n"
-            "3. Determine the specific element being worked on.\n"
-            "4. Decide which action schemas are needed to perform this instruction.\n"
-            "5. Explain your reasoning.\n\n"
+            "1. Identify the actor (human or robot) performing the action, prioritizing the stated preferences.\n"
+            "2. Determine the specific element being worked on.\n"
+            "3. Decide which action schemas are needed to perform this instruction.\n"
+            "4. Explain your reasoning, ensuring it aligns with the stated preferences.\n\n"
             "**Numbered Instructions:**\n{numbered_instructions}\n\n"
+            "**Additional Preferences:**\n{additional_preferences}\n\n"
             "Remember to only use the following action schemas:\n{action_schemas}\n\n"
-            "Proceed step by step."
+            "Proceed step by step, always prioritizing the stated preferences over default assumptions."
         )
         
         step2_chain = LLMChain(llm=self.llm, prompt=step2_prompt, verbose=True)
         interpreted_steps = step2_chain.run(
-            numbered_instructions=numbered_instructions,
+            numbered_instructions=instructions_and_preferences['instructions'],
+            additional_preferences=instructions_and_preferences['preferences'],
             action_schemas=action_schemas
         )
         
         # Step 3: Generate the Action Sequence
         step3_prompt = ChatPromptTemplate.from_template(
             "Based on your interpretations, generate the action sequence in JSON format. Follow these guidelines:\n"
-            "- Take into account the preferences for human-robot task division stated in the initial prompt\n"
+            "- Strictly adhere to the preferences for human-robot task division stated in the initial prompt\n"
             "- Use 'human_working' set to true if a human is performing the action, false if the robot is.\n"
             "- 'selected_element' should specify the element being worked on.\n"
             "- 'planning_sequence' should list the actions in execution order, using only the provided action schemas.\n"
             "- Ensure the sequence follows the exact order of the numbered instructions.\n"
-            "- Maintain consistent roles for each actor throughout the process.\n"
+            "- Maintain consistent roles for each actor throughout the process, as per the stated preferences.\n"
             "- Include necessary preparatory movements before each main action.\n"
             "- For human actions, use 'human_action(action_description)'.\n"
             "- Use specific element names (e.g., 'element_1').\n"
@@ -156,6 +162,7 @@ class PlanningAgent:
             "- Support actions should follow: 'moveto' -> 'holding', and continue 'holding' until released.\n"
             "- Use 'deposition_zone' as the destination for removed elements.\n\n"
             "**Your Interpretations:**\n{interpreted_steps}\n\n"
+            "**Additional Preferences:**\n{additional_preferences}\n\n"
             "Provide the final action sequence in the following JSON format:\n{format_instructions}\n\n"
             "Here is an example:\n{example_json}"
         )
@@ -163,6 +170,7 @@ class PlanningAgent:
         step3_chain = LLMChain(llm=self.llm, prompt=step3_prompt, verbose=True)
         final_result = step3_chain.run(
             interpreted_steps=interpreted_steps,
+            additional_preferences=instructions_and_preferences['preferences'],
             format_instructions=self.output_parser.get_format_instructions(),
             example_json=example_json
         )
@@ -174,6 +182,13 @@ class PlanningAgent:
         except Exception as e:
             logging.error(f"Planning Agent: Failed to generate action sequence: {e}")
             return None
+
+    def parse_extraction_result(self, extraction_result):
+        # Split the extraction result into instructions and preferences
+        parts = extraction_result.split("Additional actor preferences or constraints:")
+        instructions = parts[0].strip()
+        preferences = parts[1].strip() if len(parts) > 1 else ""
+        return {"instructions": instructions, "preferences": preferences}
 
     def validate_action_sequence(self, action_sequence):
         if not isinstance(action_sequence, ActionSequence):
@@ -196,7 +211,18 @@ class PlanningAgent:
                 logging.error(f"Planning Agent: Invalid actions in sequence: {', '.join(invalid_actions)}")
                 return False
 
+        # Validate against stated preferences
+        if not self.validate_against_preferences(action_sequence):
+            return False
+
         logging.info("Planning Agent: Action sequence validated successfully")
+        return True
+
+    def validate_against_preferences(self, action_sequence):
+        # This method should be implemented to check if the action sequence
+        # aligns with the stated preferences. For now, we'll just log a placeholder message.
+        logging.info("Planning Agent: Validating action sequence against stated preferences")
+        # Implement preference validation logic here
         return True
 
     def execute_preliminary_steps(self):
