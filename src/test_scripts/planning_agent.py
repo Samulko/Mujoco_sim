@@ -43,8 +43,7 @@ class PlanningAgent:
             "picking": "picking",
             "holding": "holding",
             "placing": "placing",
-            "human_action": "human_action(action_description)",
-            "support": "support"
+            "human_action": "human_action(action_description)"
         }
 
         # Initialize LangChain components
