@@ -43,9 +43,7 @@ class PlanningAgent:
             "picking": "picking",
             "holding": "holding",
             "placing": "placing",
-            "human_action": "human_action(action_description)",
-            "support": "support",
-            "removing": "removing"
+            "human_action": "human_action(action_description)"
         }
 
         # Initialize LangChain components
@@ -126,10 +124,11 @@ class PlanningAgent:
         # Step 2: Interpret Instructions Step by Step
         step2_prompt = ChatPromptTemplate.from_template(
             "Now, interpret each of the numbered Disassembly Instructions step by step. For each instruction, do the following:\n"
-            "1. Identify the actor (human or robot) performing the action.\n"
-            "2. Determine the specific element being worked on.\n"
-            "3. Decide which action schemas are needed to perform this instruction.\n"
-            "4. Explain your reasoning.\n\n"
+            "1. Identify the preferences stated in the initial prompt for which actor should perform which action.\n"
+            "2. Identify the actor (human or robot) performing the action.\n"
+            "3. Determine the specific element being worked on.\n"
+            "4. Decide which action schemas are needed to perform this instruction.\n"
+            "5. Explain your reasoning.\n\n"
             "**Numbered Instructions:**\n{numbered_instructions}\n\n"
             "Remember to only use the following action schemas:\n{action_schemas}\n\n"
             "Proceed step by step."
@@ -144,6 +143,7 @@ class PlanningAgent:
         # Step 3: Generate the Action Sequence
         step3_prompt = ChatPromptTemplate.from_template(
             "Based on your interpretations, generate the action sequence in JSON format. Follow these guidelines:\n"
+            "- Take into account the preferences for human-robot task division stated in the initial prompt\n"
             "- Use 'human_working' set to true if a human is performing the action, false if the robot is.\n"
             "- 'selected_element' should specify the element being worked on.\n"
             "- 'planning_sequence' should list the actions in execution order, using only the provided action schemas.\n"
@@ -245,7 +245,7 @@ def main():
     3. actor_2 removes the vertical column (3) from below the beam (2).
     4. Finally, actor_1 carefully removes the beam (2) that is being supported last and places it in the deposition zone.
     
-    -I, the human, will remove column 1.
+    -The robot will be supporting element 2.
     """
     success, details = planning_agent.handle_plan_execution(plan)
     if success:
