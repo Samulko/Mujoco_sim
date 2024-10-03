@@ -43,7 +43,9 @@ class PlanningAgent:
             "picking": "picking",
             "holding": "holding",
             "placing": "placing",
-            "human_action": "human_action(action_description)"
+            "human_action": "human_action(action_description)",
+            "support": "support",
+            "removing": "removing"
         }
 
         # Initialize LangChain components
@@ -110,89 +112,59 @@ class PlanningAgent:
         }
         '''
         
-        # Step 1: Initial translation
-        initial_translation_prompt = ChatPromptTemplate.from_template(
+        # Step 1: Extract Numbered Instructions
+        step1_prompt = ChatPromptTemplate.from_template(
             "You are the Planning Agent in a multi-agent system that controls a robotic arm for disassembly tasks. "
-            "Your role is to translate the disassembly sequence plan into a structured action sequence for the robotic arm to execute, "
-            "collaborating with a human operator.\n\n"
-            "Given the disassembly plan:\n{plan}\n\n"
-            "Your task is to:\n"
-            "1. Analyze the given disassembly plan, focusing primarily on the numbered Disassembly Instructions.\n"
-            "2. Create a detailed action sequence using only the following action schemas:\n{action_schemas}\n"
-            "3. Ensure the action sequence follows the EXACT order specified in the numbered Disassembly Instructions.\n"
-            "4. Maintain consistent roles for each actor throughout the entire process as defined in the numbered instructions.\n"
-            "5. Identify the specific element being worked on in each step.\n"
-            "6. Ensure that if an actor is instructed to support an element, they continue to do so until explicitly instructed to release it.\n\n"
-            "Guidelines:\n"
-            "- Prioritize the numbered Disassembly Instructions over any additional comments or information provided.\n"
-            "- Follow the disassembly instructions step by step, without changing the order or assigned roles.\n"
+            "Your first task is to extract the numbered Disassembly Instructions from the plan below.\n\n"
+            "**Plan:**\n{plan}\n\n"
+            "Please list the numbered Disassembly Instructions exactly as they appear."
+        )
+        
+        step1_chain = LLMChain(llm=self.llm, prompt=step1_prompt, verbose=True)
+        numbered_instructions = step1_chain.run(plan=plan)
+        
+        # Step 2: Interpret Instructions Step by Step
+        step2_prompt = ChatPromptTemplate.from_template(
+            "Now, interpret each of the numbered Disassembly Instructions step by step. For each instruction, do the following:\n"
+            "1. Identify the actor (human or robot) performing the action.\n"
+            "2. Determine the specific element being worked on.\n"
+            "3. Decide which action schemas are needed to perform this instruction.\n"
+            "4. Explain your reasoning.\n\n"
+            "**Numbered Instructions:**\n{numbered_instructions}\n\n"
+            "Remember to only use the following action schemas:\n{action_schemas}\n\n"
+            "Proceed step by step."
+        )
+        
+        step2_chain = LLMChain(llm=self.llm, prompt=step2_prompt, verbose=True)
+        interpreted_steps = step2_chain.run(
+            numbered_instructions=numbered_instructions,
+            action_schemas=action_schemas
+        )
+        
+        # Step 3: Generate the Action Sequence
+        step3_prompt = ChatPromptTemplate.from_template(
+            "Based on your interpretations, generate the action sequence in JSON format. Follow these guidelines:\n"
+            "- Use 'human_working' set to true if a human is performing the action, false if the robot is.\n"
+            "- 'selected_element' should specify the element being worked on.\n"
+            "- 'planning_sequence' should list the actions in execution order, using only the provided action schemas.\n"
+            "- Ensure the sequence follows the exact order of the numbered instructions.\n"
+            "- Maintain consistent roles for each actor throughout the process.\n"
             "- Include necessary preparatory movements before each main action.\n"
-            "- For human actions, use the format: human_action(action_description)\n"
-            "- Use specific element names (e.g., 'element_1' instead of 'element 1') for consistency.\n"
-            "- Use EXACTLY the action names provided (e.g., 'moveto' not 'move_to').\n"
-            "- Set human_working to true for steps performed by humans, and false for steps performed by the robot.\n"
-            "- When human_working is true, only include human_action in the planning_sequence.\n"
-            "- When human_working is false, only include robot actions in the planning_sequence.\n"
-            "- Ensure that each actor maintains their assigned role throughout the entire process as specified in the numbered instructions.\n"
-            "- Pay special attention to any instructions about human involvement, such as 'I, the human, will remove column 1.'\n"
-            "- Clearly indicate which actor (actor_1 or actor_2) is performing each action.\n\n"
-            "Ensure that:\n"
-            "1. 'human_working' is set appropriately based on whether the action is performed by a human or the robot, as specified in the numbered instructions and any additional comments.\n"
-            "2. 'selected_element' specifies the element being worked on in the current step.\n"
-            "3. The actions in the 'planning_sequence' are organized in execution order.\n"
-            "4. Robot pick-and-place sequences follow this pattern: moveto -> picking -> holding -> placing\n"
-            "5. Support actions follow this pattern: moveto -> holding, and continue holding in subsequent steps\n"
-            "6. Use 'deposition_zone' as the destination for removed elements.\n"
-            "7. Each actor maintains their assigned role consistently throughout the entire sequence as per the numbered instructions.\n\n"
-            "Here's an example of the correct JSON format:\n{example_json}\n\n"
-            "Translate the plan into a structured action sequence:\n\n{format_instructions}"
+            "- For human actions, use 'human_action(action_description)'.\n"
+            "- Use specific element names (e.g., 'element_1').\n"
+            "- Robot pick-and-place sequences should follow: 'moveto' -> 'picking' -> 'holding' -> 'placing'.\n"
+            "- Support actions should follow: 'moveto' -> 'holding', and continue 'holding' until released.\n"
+            "- Use 'deposition_zone' as the destination for removed elements.\n\n"
+            "**Your Interpretations:**\n{interpreted_steps}\n\n"
+            "Provide the final action sequence in the following JSON format:\n{format_instructions}\n\n"
+            "Here is an example:\n{example_json}"
         )
         
-        initial_chain = LLMChain(llm=self.llm, prompt=initial_translation_prompt, verbose=True)
-        
-        initial_result = initial_chain.run(
-            plan=plan,
-            action_schemas=action_schemas,
-            example_json=example_json,
-            format_instructions=self.output_parser.get_format_instructions()
-        )
-        
-        # Step 2: Analyze and correct
-        analysis_prompt = ChatPromptTemplate.from_template(
-            "Analyze the following action sequence and ensure it adheres to the original plan:\n\n"
-            "Original Plan:\n{plan}\n\n"
-            "Generated Action Sequence:\n{action_sequence}\n\n"
-            "Please identify any discrepancies or errors, especially regarding:\n"
-            "1. The order of actions\n"
-            "2. Actor roles and consistency\n"
-            "3. Correct use of action schemas\n"
-            "4. Adherence to the numbered Disassembly Instructions\n"
-            "5. Continuous support of elements as specified\n"
-            "6. Maintaining consistent roles for each actor throughout the entire process\n\n"
-            "Provide a corrected action sequence if necessary."
-        )
-        
-        analysis_chain = LLMChain(llm=self.llm, prompt=analysis_prompt, verbose=True)
-        
-        analysis_result = analysis_chain.run(plan=plan, action_sequence=initial_result)
-        
-        # Step 3: Final validation
-        validation_prompt = ChatPromptTemplate.from_template(
-            "Given the original plan and the analyzed action sequence, provide a final, corrected action sequence "
-            "that strictly adheres to the numbered Disassembly Instructions and maintains consistent actor roles:\n\n"
-            "Original Plan:\n{plan}\n\n"
-            "Analyzed Action Sequence:\n{analyzed_sequence}\n\n"
-            "Provide the final, corrected action sequence using the following format:\n"
-            "{format_instructions}"
-        )
-        
-        validation_chain = LLMChain(llm=self.llm, prompt=validation_prompt, verbose=True)
-        
-        final_result = validation_chain.run(
-            plan=plan,
-            analyzed_sequence=analysis_result,
-            action_schemas=action_schemas,
-            format_instructions=self.output_parser.get_format_instructions()
+        step3_chain = LLMChain(llm=self.llm, prompt=step3_prompt, verbose=True)
+        final_result = step3_chain.run(
+            interpreted_steps=interpreted_steps,
+            format_instructions=self.output_parser.get_format_instructions(),
+            example_json=example_json
         )
         
         try:
