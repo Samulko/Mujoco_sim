@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-from openai import OpenAI  # Add this import
+from openai import OpenAI
 from pydantic import Field
 import json
 import logging
@@ -9,6 +9,10 @@ import time
 from typing import List
 import instructor
 from instructor import OpenAISchema
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain.chains import LLMChain
+from langchain.output_parsers import PydanticOutputParser
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -41,6 +45,10 @@ class PlanningAgent:
             "placing": "placing",
             "human_action": "human_action(action_description)"
         }
+
+        # Initialize LangChain components
+        self.llm = ChatOpenAI(model_name="gpt-4", temperature=0)
+        self.output_parser = PydanticOutputParser(pydantic_object=ActionSequence)
 
         logging.info("Planning Agent Initialized and ready to work.")
 
@@ -78,74 +86,65 @@ class PlanningAgent:
             "distribute_load_evenly",
             "monitor_stability_continuously"
         ]
-        action_sequence["planning_sequence"] = safety_measures + action_sequence["planning_sequence"]
+        action_sequence.actions[0].planning_sequence = safety_measures + action_sequence.actions[0].planning_sequence
         return action_sequence
 
     def translate_plan(self, plan):
         logging.info(f"Planning Agent: Translating plan: {plan}")
         action_schemas = ', '.join(f"{key}: {value}" for key, value in self.robot_actions.items())
-        prompt = f"""
-        You are the Planning Agent in a multi-agent system that controls a robotic arm for disassembly tasks. Your role is to translate the disassembly sequence plan into a structured action sequence for the robotic arm to execute, collaborating with a human operator. 
-
-        Given the disassembly plan:
-        {plan}
-
-        Your task is to:
-        1. Analyze the given disassembly plan, focusing primarily on the numbered Disassembly Instructions.
-        2. Create a detailed action sequence using only the following action schemas:
-           {action_schemas}
-        3. Ensure the action sequence follows the EXACT order specified in the numbered Disassembly Instructions.
-        4. Maintain consistent roles for each actor throughout the entire process as defined in the numbered instructions.
-        5. Identify the specific element being worked on in each step.
-        6. Ensure that if an actor is instructed to support an element, they continue to do so until explicitly instructed to release it.
-
-        Guidelines:
-        - Prioritize the numbered Disassembly Instructions over any additional comments or information provided.
-        - Follow the disassembly instructions step by step, without changing the order or assigned roles.
-        - Break down complex movements into a series of simpler actions.
-        - Include necessary preparatory movements before each main action.
-        - For human actions, use the format: human_action(action_description)
-        - Use specific element names (e.g., "element_1" instead of "element 1") for consistency.
-        - Use EXACTLY the action names provided (e.g., 'moveto' not 'move_to').
-        - Set human_working to true for steps performed by humans, and false for steps performed by the robot.
-        - When human_working is true, only include human_action in the planning_sequence.
-        - When human_working is false, only include robot actions in the planning_sequence.
-        - Ensure that each actor maintains their assigned role throughout the entire process as specified in the numbered instructions.
-
-        Ensure that:
-        1. "human_working" is set appropriately based on whether the action is performed by a human or the robot, as specified in the numbered instructions.
-        2. "selected_element" specifies the element being worked on in the current step.
-        3. The actions in the "planning_sequence" are organized in execution order.
-        4. Robot pick-and-place sequences follow this pattern: moveto -> picking -> holding -> placing
-        5. Support actions follow this pattern: moveto -> holding, and continue holding in subsequent steps
-        6. Use 'deposition_zone' as the destination for removed elements.
-        7. Each actor maintains their assigned role consistently throughout the entire sequence as per the numbered instructions.
-
-        Note: Your response will be automatically parsed into a structure like this:
-        {{
-            "actions": [
-                {{
-                    "human_working": boolean,
-                    "selected_element": "element_name",
-                    "planning_sequence": ["action1", "action2", ...]
-                }},
-                ...
-            ]
-        }}
-
-        Planning Agent, please provide the structured action sequence based on the given disassembly plan, ensuring clear collaboration between actors, maintaining continuous support of elements as specified, and keeping each actor in their assigned role throughout the entire process as defined in the numbered Disassembly Instructions.
-        Re-evaluate your plan and make sure it matches the numbered disassembly sequence plan exactly, maintaining consistent roles for each actor as specified in those instructions.
-        """
+        
+        # Step 1: Initial translation
+        initial_translation_prompt = ChatPromptTemplate.from_template(
+            "Translate the following disassembly plan into a structured action sequence:\n\n{plan}\n\n"
+            "Use only these action schemas: {action_schemas}\n"
+            "{format_instructions}"
+        )
+        
+        initial_chain = LLMChain(llm=self.llm, prompt=initial_translation_prompt, verbose=True)
+        
+        initial_result = initial_chain.run(
+            plan=plan,
+            action_schemas=action_schemas,
+            format_instructions=self.output_parser.get_format_instructions()
+        )
+        
+        # Step 2: Analyze and correct
+        analysis_prompt = ChatPromptTemplate.from_template(
+            "Analyze the following action sequence and ensure it adheres to the original plan:\n\n"
+            "Original Plan:\n{plan}\n\n"
+            "Generated Action Sequence:\n{action_sequence}\n\n"
+            "Please identify any discrepancies or errors, especially regarding:\n"
+            "1. The order of actions\n"
+            "2. Actor roles and consistency\n"
+            "3. Correct use of action schemas\n"
+            "4. Adherence to the numbered Disassembly Instructions\n\n"
+            "Provide a corrected action sequence if necessary."
+        )
+        
+        analysis_chain = LLMChain(llm=self.llm, prompt=analysis_prompt, verbose=True)
+        
+        analysis_result = analysis_chain.run(plan=plan, action_sequence=initial_result)
+        
+        # Step 3: Final validation
+        validation_prompt = ChatPromptTemplate.from_template(
+            "Given the original plan and the analyzed action sequence, provide a final, corrected action sequence "
+            "that strictly adheres to the numbered Disassembly Instructions and maintains consistent actor roles:\n\n"
+            "Original Plan:\n{plan}\n\n"
+            "Analyzed Action Sequence:\n{analyzed_sequence}\n\n"
+            "Provide the final, corrected action sequence using the following format:\n"
+            "{format_instructions}"
+        )
+        
+        validation_chain = LLMChain(llm=self.llm, prompt=validation_prompt, verbose=True)
+        
+        final_result = validation_chain.run(
+            plan=plan,
+            analyzed_sequence=analysis_result,
+            format_instructions=self.output_parser.get_format_instructions()
+        )
+        
         try:
-            action_sequence = self.client.chat.completions.create(
-                model="gpt-4o",
-                response_model=ActionSequence,
-                temperature=0,  # Add this line to set the temperature (value between 0 and 2)
-                messages=[
-                    {"role": "system", "content": "You are a planning agent that translates disassembly plans into structured action sequences."},
-                    {"role": "user", "content": prompt}
-                ]
-            )
+            action_sequence = self.output_parser.parse(final_result)
             logging.info(f"Planning Agent: Translated plan into action sequence: {action_sequence}")
             return action_sequence
         except Exception as e:
