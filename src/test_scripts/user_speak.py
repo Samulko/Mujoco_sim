@@ -71,19 +71,17 @@ def record_audio(filename, sample_rate=16000):
         # Concatenate all recorded chunks
         recording = np.concatenate(recording, axis=0)
         
-        # Check if the recording is not just silence
-        rms = np.sqrt(np.mean(recording**2))
-        if rms > 0.01:  # Lowered threshold, adjust as needed
-            # Normalize the recording to 16-bit range
+        # Normalize the recording to 16-bit range
+        if np.max(np.abs(recording)) > 0:
             recording = np.int16(recording / np.max(np.abs(recording)) * 32767)
-            wav.write(filename, sample_rate, recording)
-            logging.info(f"Audio saved to {filename}")
-            return filename
         else:
-            print(f"Warning: Recording appears to be very quiet (RMS: {rms:.4f}). It may not be transcribed accurately.")
-            logging.warning(f"Recording appears to be very quiet (RMS: {rms:.4f}).")
-            wav.write(filename, sample_rate, recording)
-            return filename
+            print("Warning: Recording contains only silence.")
+            logging.warning("Recording contains only silence.")
+            return None
+        
+        wav.write(filename, sample_rate, recording)
+        logging.info(f"Audio saved to {filename}")
+        return filename
     except Exception as e:
         logging.error(f"Error in record_audio: {str(e)}", exc_info=True)
         print(f"An error occurred while recording audio: {str(e)}")
@@ -132,20 +130,24 @@ def main():
                 # Record audio and save it to WAV file
                 recorded_file = record_audio(audio_filename)
                 if recorded_file is None:
-                    print("No audio recorded. Try again or enter 'q' to quit.")
+                    print("No valid audio recorded. Try again or enter 'q' to quit.")
                     if input().lower() == 'q':
                         break
                     continue
 
                 # Transcribe audio using Whisper API
-                transcription = transcribe_audio(recorded_file)
-                print("Transcription:")
-                print(transcription)
+                try:
+                    transcription = transcribe_audio(recorded_file)
+                    print("Transcription:")
+                    print(transcription)
 
-                # Save the transcription to a file
-                with open(transcription_filename, "a") as f:
-                    f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: {transcription}\n\n")
-                logging.info(f"Transcription saved to {transcription_filename}")
+                    # Save the transcription to a file
+                    with open(transcription_filename, "a") as f:
+                        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: {transcription}\n\n")
+                    logging.info(f"Transcription saved to {transcription_filename}")
+                except Exception as e:
+                    print(f"Transcription failed: {str(e)}")
+                    logging.error(f"Transcription failed: {str(e)}")
 
                 # Remove the temporary audio file
                 if os.path.exists(audio_filename):
