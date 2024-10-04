@@ -10,6 +10,7 @@ import tempfile
 import threading
 import time
 import sys
+import signal
 
 # Load environment variables from .env file
 load_dotenv()
@@ -107,6 +108,12 @@ def transcribe_audio(filename, max_retries=3):
                 print("Max retries reached. Transcription failed.")
                 raise
 
+# Add this at the top of the file
+TIMEOUT = 60  # 60 seconds timeout for recording
+
+def timeout_handler(signum, frame):
+    raise TimeoutError("Recording timed out")
+
 def main():
     temp_dir = None
     silent_recordings = 0
@@ -130,8 +137,16 @@ def main():
 
         while True:
             try:
+                # Set up the timeout
+                signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(TIMEOUT)
+
                 # Record audio and save it to WAV file
                 recorded_file = record_audio(audio_filename)
+                
+                # Cancel the alarm
+                signal.alarm(0)
+
                 if recorded_file is None:
                     silent_recordings += 1
                     print(f"No valid audio recorded. ({silent_recordings}/{max_silent_recordings})")
@@ -170,6 +185,20 @@ def main():
                     print("Quitting the program...")
                     return
 
+            except TimeoutError:
+                print("Recording timed out. Please try again.")
+                logging.warning("Recording timed out")
+            except KeyboardInterrupt:
+                print("\nRecording interrupted by user.")
+                logging.info("Recording interrupted by user")
+                if os.path.exists(audio_filename):
+                    os.remove(audio_filename)
+                    logging.info(f"Temporary audio file {audio_filename} removed")
+                print("Press Enter to record again, or 'q' to quit.")
+                user_input = input().lower()
+                if user_input == 'q':
+                    print("Quitting the program...")
+                    return
             except Exception as e:
                 logging.error(f"Error in main loop: {str(e)}", exc_info=True)
                 print(f"An error occurred. Please check the log file at {log_file} for details.")
@@ -182,9 +211,6 @@ def main():
     except Exception as e:
         logging.error(f"Error in main: {str(e)}", exc_info=True)
         print(f"An error occurred. Please check the log file at {log_file} for details.")
-    except KeyboardInterrupt:
-        print("\nProgram interrupted by user. Exiting...")
-        logging.info("Program interrupted by user")
     finally:
         # Clean up the temporary directory
         if temp_dir and os.path.exists(temp_dir):
