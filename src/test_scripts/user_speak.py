@@ -108,6 +108,9 @@ def transcribe_audio(filename, max_retries=3):
                 raise
 
 def main():
+    temp_dir = None
+    silent_recordings = 0
+    max_silent_recordings = 3
     try:
         # Use a temporary directory for audio files
         temp_dir = tempfile.mkdtemp()
@@ -130,10 +133,17 @@ def main():
                 # Record audio and save it to WAV file
                 recorded_file = record_audio(audio_filename)
                 if recorded_file is None:
-                    print("No valid audio recorded. Try again or enter 'q' to quit.")
-                    if input().lower() == 'q':
+                    silent_recordings += 1
+                    print(f"No valid audio recorded. ({silent_recordings}/{max_silent_recordings})")
+                    if silent_recordings >= max_silent_recordings:
+                        print(f"Maximum number of silent recordings ({max_silent_recordings}) reached. Exiting...")
                         break
+                    print("Try again or enter 'q' to quit.")
+                    if input().lower() == 'q':
+                        print("Quitting the program...")
+                        return
                     continue
+                silent_recordings = 0  # Reset silent recordings counter
 
                 # Transcribe audio using Whisper API
                 try:
@@ -155,8 +165,10 @@ def main():
                     logging.info(f"Temporary audio file {audio_filename} removed")
 
                 print("Press Enter to record again, or 'q' to quit.")
-                if input().lower() == 'q':
-                    break
+                user_input = input().lower()
+                if user_input == 'q':
+                    print("Quitting the program...")
+                    return
 
             except Exception as e:
                 logging.error(f"Error in main loop: {str(e)}", exc_info=True)
@@ -170,9 +182,12 @@ def main():
     except Exception as e:
         logging.error(f"Error in main: {str(e)}", exc_info=True)
         print(f"An error occurred. Please check the log file at {log_file} for details.")
+    except KeyboardInterrupt:
+        print("\nProgram interrupted by user. Exiting...")
+        logging.info("Program interrupted by user")
     finally:
         # Clean up the temporary directory
-        if os.path.exists(temp_dir):
+        if temp_dir and os.path.exists(temp_dir):
             import shutil
             shutil.rmtree(temp_dir)
             logging.info(f"Temporary directory {temp_dir} removed")
