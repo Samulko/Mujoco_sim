@@ -261,17 +261,79 @@ class PlanningAgent:
 def main():
     planning_agent = PlanningAgent()
     plan = """
-    Description of the Structure:
-    - Simple portal frame structure with three elements: two vertical columns (column 1 and column 3) and one horizontal beam (beam 2).
-    - The structure forms a basic 'П' shape, and all elements are assumed to be of standard construction material (like timber, steel, or concrete) with the same dimensions.
-
-    Disassembly Instructions:
-    1. actor_1 supports the beam (element 2) to secure the structure.
-    2. actor_2 removes the vertical column (1) from below the beam (2).
-    3. actor_2 removes the vertical column (3) from below the beam (2).
-    4. Finally, actor_1 carefully removes the beam (2) that is being supported last and places it in the deposition zone.
-    
-    -The robot will be removing the columns.
+{
+    "request": "disassemble a frame consisting of 3 elements. Make sure the human is the one who disassembles the columns",
+    "response": {
+        "name": "Simple Portal Frame Disassembly",
+        "description_of_structure": "Simple portal frame structure with three elements: two vertical columns and one horizontal beam, forming a basic '\u041f' shape.",
+        "components": [
+            {
+                "component_id": "element_1",
+                "component_type": "column",
+                "connections": [
+                    "element_2"
+                ]
+            },
+            {
+                "component_id": "element_2",
+                "component_type": "beam",
+                "connections": [
+                    "element_1",
+                    "element_3"
+                ]
+            },
+            {
+                "component_id": "element_3",
+                "component_type": "column",
+                "connections": [
+                    "element_2"
+                ]
+            }
+        ],
+        "disassembly_instructions": [
+            {
+                "step": "actor_1 supports the beam (element 2) to secure the structure"
+            },
+            {
+                "step": "actor_2 removes the vertical column (1) from below of beam (2), which is being supported by actor_1"
+            },
+            {
+                "step": "actor_2 removes the vertical column (3) from below of beam (2), which is being supported by actor_1"
+            },
+            {
+                "step": "actor_1 carefully removes the beam (2), that is being supported last"
+            }
+        ],
+        "actor_assignments": [
+            {
+                "task": "Support the beam (element 2)",
+                "actor": "actor_1"
+            },
+            {
+                "task": "Remove the vertical column (1)",
+                "actor": "actor_2"
+            },
+            {
+                "task": "Remove the vertical column (3)",
+                "actor": "actor_2"
+            },
+            {
+                "task": "Remove the beam (2)",
+                "actor": "actor_1"
+            }
+        ],
+        "safety_instructions": [
+            "Ensure all workers wear appropriate personal protective equipment (PPE) including hard hats, safety glasses, and steel-toed boots",
+            "Use certified lifting equipment and rigging appropriate for the weight and size of the elements",
+            "Keep the work area clear of unnecessary personnel during the disassembly process",
+            "Be cautious of potential instability once joints are disconnected",
+            "If the structure is made of concrete, be aware of potential dust hazards and use appropriate dust control measures"
+        ],
+        "user_additional_preferences": "Make sure the human is the one who disassembles the columns.",
+        "is_standard": true,
+        "compliance_references": []
+    }
+}
     """
     success, details = planning_agent.handle_plan_execution(plan)
     if success:

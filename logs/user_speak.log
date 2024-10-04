@@ -1,0 +1,251 @@
+2024-10-04 21:58:04,353 - DEBUG - load_ssl_context verify=True cert=None trust_env=True http2=False
+2024-10-04 21:58:04,355 - DEBUG - load_verify_locations cafile='/home/samko/.pyenv/versions/3.10.15/envs/venv_tests/lib/python3.10/site-packages/certifi/cacert.pem'
+2024-10-04 21:58:04,364 - INFO - Temporary audio file will be saved as: /tmp/tmpo7pu7qi1/recorded_audio.wav
+2024-10-04 21:58:04,364 - INFO - Transcriptions will be saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_215804.txt
+2024-10-04 21:58:06,512 - INFO - Starting audio recording for 5 seconds...
+2024-10-04 21:58:11,578 - INFO - Audio recording completed.
+2024-10-04 21:58:11,579 - INFO - Audio saved to /tmp/tmpo7pu7qi1/recorded_audio.wav
+2024-10-04 21:58:11,579 - INFO - Starting transcription of /tmp/tmpo7pu7qi1/recorded_audio.wav
+2024-10-04 21:58:11,582 - DEBUG - Request options: {'method': 'post', 'url': '/audio/transcriptions', 'headers': {'Content-Type': 'multipart/form-data'}, 'files': [('file', SerializationIterator(index=0, iterator=SerializationIterator(index=0, iterator=<_io.BufferedReader name='/tmp/tmpo7pu7qi1/recorded_audio.wav'>)))], 'json_data': {'model': 'whisper-1'}}
+2024-10-04 21:58:11,592 - DEBUG - Sending HTTP Request: POST https://api.openai.com/v1/audio/transcriptions
+2024-10-04 21:58:11,592 - DEBUG - connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2024-10-04 21:58:11,636 - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7fcb6b4dc6d0>
+2024-10-04 21:58:11,636 - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x7fcb6b656740> server_hostname='api.openai.com' timeout=5.0
+2024-10-04 21:58:11,644 - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7fcb6b4dc6a0>
+2024-10-04 21:58:11,644 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-10-04 21:58:11,645 - DEBUG - send_request_headers.complete
+2024-10-04 21:58:11,645 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-10-04 21:58:11,646 - DEBUG - send_request_body.complete
+2024-10-04 21:58:11,647 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-10-04 21:58:12,821 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 04 Oct 2024 19:58:12 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-jdviku2yvsghjue6dnsod5vf'), (b'openai-processing-ms', b'546'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'500'), (b'x-ratelimit-remaining-requests', b'499'), (b'x-ratelimit-reset-requests', b'120ms'), (b'x-request-id', b'req_22563f887b5b0668fa3bf4eb1c1302f9'), (b'CF-Cache-Status', b'DYNAMIC'), (b'Set-Cookie', b'__cf_bm=bvRaOVjDP_NDmikcGqg_y6w8PmVjVPSFpUJuHAcDMw8-1728071892-1.0.1.1-YaDauTognvEqvTexPrhtDpt8EpZobiFNNJCEBJzCYWU3VEPkllFjoN31VxrTuZUeFD4FDeVGJ5EY5rCDtXuhAQ; path=/; expires=Fri, 04-Oct-24 20:28:12 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'X-Content-Type-Options', b'nosniff'), (b'Set-Cookie', b'_cfuvid=TUVxfXqUHh9JNJTZSKW6qhVGo832vpQ1UPvKZaVIpf0-1728071892850-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8cd7becb0d192c0e-STR'), (b'Content-Encoding', b'gzip')])
+2024-10-04 21:58:12,823 - INFO - HTTP Request: POST https://api.openai.com/v1/audio/transcriptions "HTTP/1.1 200 OK"
+2024-10-04 21:58:12,825 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-10-04 21:58:12,825 - DEBUG - receive_response_body.complete
+2024-10-04 21:58:12,826 - DEBUG - response_closed.started
+2024-10-04 21:58:12,826 - DEBUG - response_closed.complete
+2024-10-04 21:58:12,826 - DEBUG - HTTP Response: POST https://api.openai.com/v1/audio/transcriptions "200 OK" Headers([('date', 'Fri, 04 Oct 2024 19:58:12 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('access-control-expose-headers', 'X-Request-ID'), ('openai-organization', 'user-jdviku2yvsghjue6dnsod5vf'), ('openai-processing-ms', '546'), ('openai-version', '2020-10-01'), ('strict-transport-security', 'max-age=31536000; includeSubDomains; preload'), ('x-ratelimit-limit-requests', '500'), ('x-ratelimit-remaining-requests', '499'), ('x-ratelimit-reset-requests', '120ms'), ('x-request-id', 'req_22563f887b5b0668fa3bf4eb1c1302f9'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=bvRaOVjDP_NDmikcGqg_y6w8PmVjVPSFpUJuHAcDMw8-1728071892-1.0.1.1-YaDauTognvEqvTexPrhtDpt8EpZobiFNNJCEBJzCYWU3VEPkllFjoN31VxrTuZUeFD4FDeVGJ5EY5rCDtXuhAQ; path=/; expires=Fri, 04-Oct-24 20:28:12 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('x-content-type-options', 'nosniff'), ('set-cookie', '_cfuvid=TUVxfXqUHh9JNJTZSKW6qhVGo832vpQ1UPvKZaVIpf0-1728071892850-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('server', 'cloudflare'), ('cf-ray', '8cd7becb0d192c0e-STR'), ('content-encoding', 'gzip')])
+2024-10-04 21:58:12,826 - DEBUG - request_id: req_22563f887b5b0668fa3bf4eb1c1302f9
+2024-10-04 21:58:12,827 - INFO - Transcription completed successfully
+2024-10-04 21:58:12,827 - INFO - Transcription saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_215804.txt
+2024-10-04 21:58:12,827 - INFO - Temporary audio file /tmp/tmpo7pu7qi1/recorded_audio.wav removed
+2024-10-04 22:00:38,882 - INFO - Temporary directory /tmp/tmpo7pu7qi1 removed
+2024-10-04 22:00:39,099 - DEBUG - close.started
+2024-10-04 22:00:39,100 - DEBUG - close.complete
+2024-10-04 22:00:49,004 - DEBUG - load_ssl_context verify=True cert=None trust_env=True http2=False
+2024-10-04 22:00:49,006 - DEBUG - load_verify_locations cafile='/home/samko/.pyenv/versions/3.10.15/envs/venv_tests/lib/python3.10/site-packages/certifi/cacert.pem'
+2024-10-04 22:00:49,018 - INFO - Temporary audio file will be saved as: /tmp/tmpqa8e9hco/recorded_audio.wav
+2024-10-04 22:00:49,019 - INFO - Transcriptions will be saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_220049.txt
+2024-10-04 22:00:49,019 - INFO - Starting audio recording...
+2024-10-04 22:01:04,991 - INFO - Audio recording completed.
+2024-10-04 22:01:04,994 - INFO - Audio saved to /tmp/tmpqa8e9hco/recorded_audio.wav
+2024-10-04 22:01:04,994 - INFO - Starting transcription of /tmp/tmpqa8e9hco/recorded_audio.wav (Attempt 1)
+2024-10-04 22:01:04,996 - DEBUG - Request options: {'method': 'post', 'url': '/audio/transcriptions', 'headers': {'Content-Type': 'multipart/form-data'}, 'files': [('file', SerializationIterator(index=0, iterator=SerializationIterator(index=0, iterator=<_io.BufferedReader name='/tmp/tmpqa8e9hco/recorded_audio.wav'>)))], 'json_data': {'model': 'whisper-1'}}
+2024-10-04 22:01:05,006 - DEBUG - Sending HTTP Request: POST https://api.openai.com/v1/audio/transcriptions
+2024-10-04 22:01:05,007 - DEBUG - connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2024-10-04 22:01:05,094 - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7fad7c3e5690>
+2024-10-04 22:01:05,095 - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x7fad7c57a6c0> server_hostname='api.openai.com' timeout=5.0
+2024-10-04 22:01:05,108 - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7fad7c3e5660>
+2024-10-04 22:01:05,108 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-10-04 22:01:05,109 - DEBUG - send_request_headers.complete
+2024-10-04 22:01:05,109 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-10-04 22:01:05,128 - DEBUG - send_request_body.complete
+2024-10-04 22:01:05,128 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-10-04 22:01:07,074 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 04 Oct 2024 20:01:07 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-jdviku2yvsghjue6dnsod5vf'), (b'openai-processing-ms', b'723'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'500'), (b'x-ratelimit-remaining-requests', b'499'), (b'x-ratelimit-reset-requests', b'120ms'), (b'x-request-id', b'req_23eaccc971840accb524d420695bb9fa'), (b'CF-Cache-Status', b'DYNAMIC'), (b'Set-Cookie', b'__cf_bm=jsHfaPZ.In0YCLY3pOzG6lwzBJqnOW.ZAIsvUcS2olM-1728072067-1.0.1.1-C1rYg.UsnhQlc2vLgVQtfbdUMx0n2jy3.SQNUxW.IjnZcQLQNHAM8EuDtHHRPDn2XclgpxxG8Um2qq9H3byNZQ; path=/; expires=Fri, 04-Oct-24 20:31:07 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'X-Content-Type-Options', b'nosniff'), (b'Set-Cookie', b'_cfuvid=lDpFytHBczSC5hQuRGRL2dVllPmer1GMDzDpsH9wOVI-1728072067060-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8cd7c30729112c0a-STR'), (b'Content-Encoding', b'gzip')])
+2024-10-04 22:01:07,075 - INFO - HTTP Request: POST https://api.openai.com/v1/audio/transcriptions "HTTP/1.1 200 OK"
+2024-10-04 22:01:07,076 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-10-04 22:01:07,076 - DEBUG - receive_response_body.complete
+2024-10-04 22:01:07,076 - DEBUG - response_closed.started
+2024-10-04 22:01:07,076 - DEBUG - response_closed.complete
+2024-10-04 22:01:07,076 - DEBUG - HTTP Response: POST https://api.openai.com/v1/audio/transcriptions "200 OK" Headers([('date', 'Fri, 04 Oct 2024 20:01:07 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('access-control-expose-headers', 'X-Request-ID'), ('openai-organization', 'user-jdviku2yvsghjue6dnsod5vf'), ('openai-processing-ms', '723'), ('openai-version', '2020-10-01'), ('strict-transport-security', 'max-age=31536000; includeSubDomains; preload'), ('x-ratelimit-limit-requests', '500'), ('x-ratelimit-remaining-requests', '499'), ('x-ratelimit-reset-requests', '120ms'), ('x-request-id', 'req_23eaccc971840accb524d420695bb9fa'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=jsHfaPZ.In0YCLY3pOzG6lwzBJqnOW.ZAIsvUcS2olM-1728072067-1.0.1.1-C1rYg.UsnhQlc2vLgVQtfbdUMx0n2jy3.SQNUxW.IjnZcQLQNHAM8EuDtHHRPDn2XclgpxxG8Um2qq9H3byNZQ; path=/; expires=Fri, 04-Oct-24 20:31:07 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('x-content-type-options', 'nosniff'), ('set-cookie', '_cfuvid=lDpFytHBczSC5hQuRGRL2dVllPmer1GMDzDpsH9wOVI-1728072067060-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('server', 'cloudflare'), ('cf-ray', '8cd7c30729112c0a-STR'), ('content-encoding', 'gzip')])
+2024-10-04 22:01:07,076 - DEBUG - request_id: req_23eaccc971840accb524d420695bb9fa
+2024-10-04 22:01:07,077 - INFO - Transcription completed successfully
+2024-10-04 22:01:07,077 - INFO - Transcription saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_220049.txt
+2024-10-04 22:01:07,078 - INFO - Temporary audio file /tmp/tmpqa8e9hco/recorded_audio.wav removed
+2024-10-04 22:01:12,439 - INFO - Starting audio recording...
+2024-10-04 22:01:23,774 - INFO - Audio recording completed.
+2024-10-04 22:01:23,777 - INFO - Audio saved to /tmp/tmpqa8e9hco/recorded_audio.wav
+2024-10-04 22:01:23,777 - INFO - Starting transcription of /tmp/tmpqa8e9hco/recorded_audio.wav (Attempt 1)
+2024-10-04 22:01:23,778 - DEBUG - Request options: {'method': 'post', 'url': '/audio/transcriptions', 'headers': {'Content-Type': 'multipart/form-data'}, 'files': [('file', SerializationIterator(index=0, iterator=SerializationIterator(index=0, iterator=<_io.BufferedReader name='/tmp/tmpqa8e9hco/recorded_audio.wav'>)))], 'json_data': {'model': 'whisper-1'}}
+2024-10-04 22:01:23,779 - DEBUG - Sending HTTP Request: POST https://api.openai.com/v1/audio/transcriptions
+2024-10-04 22:01:23,780 - DEBUG - close.started
+2024-10-04 22:01:23,780 - DEBUG - close.complete
+2024-10-04 22:01:23,780 - DEBUG - connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2024-10-04 22:01:23,821 - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7fad7c3e7460>
+2024-10-04 22:01:23,821 - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x7fad7c57a6c0> server_hostname='api.openai.com' timeout=5.0
+2024-10-04 22:01:23,827 - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7fad7c3e7310>
+2024-10-04 22:01:23,828 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-10-04 22:01:23,828 - DEBUG - send_request_headers.complete
+2024-10-04 22:01:23,828 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-10-04 22:01:23,830 - DEBUG - send_request_body.complete
+2024-10-04 22:01:23,830 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-10-04 22:01:25,040 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 04 Oct 2024 20:01:25 GMT'), (b'Content-Type', b'application/json'), (b'Content-Length', b'19'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-jdviku2yvsghjue6dnsod5vf'), (b'openai-processing-ms', b'408'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'500'), (b'x-ratelimit-remaining-requests', b'499'), (b'x-ratelimit-reset-requests', b'120ms'), (b'x-request-id', b'req_185e47eb55bc23a1296baab176925806'), (b'CF-Cache-Status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8cd7c37c2a5c2c0a-STR')])
+2024-10-04 22:01:25,041 - INFO - HTTP Request: POST https://api.openai.com/v1/audio/transcriptions "HTTP/1.1 200 OK"
+2024-10-04 22:01:25,041 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-10-04 22:01:25,041 - DEBUG - receive_response_body.complete
+2024-10-04 22:01:25,042 - DEBUG - response_closed.started
+2024-10-04 22:01:25,042 - DEBUG - response_closed.complete
+2024-10-04 22:01:25,042 - DEBUG - HTTP Response: POST https://api.openai.com/v1/audio/transcriptions "200 OK" Headers({'date': 'Fri, 04 Oct 2024 20:01:25 GMT', 'content-type': 'application/json', 'content-length': '19', 'connection': 'keep-alive', 'access-control-expose-headers': 'X-Request-ID', 'openai-organization': 'user-jdviku2yvsghjue6dnsod5vf', 'openai-processing-ms': '408', 'openai-version': '2020-10-01', 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'x-ratelimit-limit-requests': '500', 'x-ratelimit-remaining-requests': '499', 'x-ratelimit-reset-requests': '120ms', 'x-request-id': 'req_185e47eb55bc23a1296baab176925806', 'cf-cache-status': 'DYNAMIC', 'x-content-type-options': 'nosniff', 'server': 'cloudflare', 'cf-ray': '8cd7c37c2a5c2c0a-STR'})
+2024-10-04 22:01:25,042 - DEBUG - request_id: req_185e47eb55bc23a1296baab176925806
+2024-10-04 22:01:25,043 - INFO - Transcription completed successfully
+2024-10-04 22:01:25,043 - INFO - Transcription saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_220049.txt
+2024-10-04 22:01:25,043 - INFO - Temporary audio file /tmp/tmpqa8e9hco/recorded_audio.wav removed
+2024-10-04 22:03:34,947 - INFO - Script execution completed successfully
+2024-10-04 22:03:34,948 - INFO - Temporary directory /tmp/tmpqa8e9hco removed
+2024-10-04 22:03:35,095 - DEBUG - close.started
+2024-10-04 22:03:35,095 - DEBUG - close.complete
+2024-10-04 22:03:42,650 - DEBUG - load_ssl_context verify=True cert=None trust_env=True http2=False
+2024-10-04 22:03:42,652 - DEBUG - load_verify_locations cafile='/home/samko/.pyenv/versions/3.10.15/envs/venv_tests/lib/python3.10/site-packages/certifi/cacert.pem'
+2024-10-04 22:03:42,660 - INFO - Temporary audio file will be saved as: /tmp/tmpz050ygns/recorded_audio.wav
+2024-10-04 22:03:42,660 - INFO - Transcriptions will be saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_220342.txt
+2024-10-04 22:03:42,660 - INFO - Starting audio recording...
+2024-10-04 22:03:46,824 - INFO - Audio recording completed.
+2024-10-04 22:03:46,825 - INFO - Audio saved to /tmp/tmpz050ygns/recorded_audio.wav
+2024-10-04 22:03:46,825 - INFO - Starting transcription of /tmp/tmpz050ygns/recorded_audio.wav (Attempt 1)
+2024-10-04 22:03:46,827 - DEBUG - Request options: {'method': 'post', 'url': '/audio/transcriptions', 'headers': {'Content-Type': 'multipart/form-data'}, 'files': [('file', SerializationIterator(index=0, iterator=SerializationIterator(index=0, iterator=<_io.BufferedReader name='/tmp/tmpz050ygns/recorded_audio.wav'>)))], 'json_data': {'model': 'whisper-1'}}
+2024-10-04 22:03:46,837 - DEBUG - Sending HTTP Request: POST https://api.openai.com/v1/audio/transcriptions
+2024-10-04 22:03:46,838 - DEBUG - connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2024-10-04 22:03:46,876 - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f57d0a8da80>
+2024-10-04 22:03:46,876 - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x7f57d0c226c0> server_hostname='api.openai.com' timeout=5.0
+2024-10-04 22:03:46,883 - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f57d0a8da50>
+2024-10-04 22:03:46,883 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-10-04 22:03:46,884 - DEBUG - send_request_headers.complete
+2024-10-04 22:03:46,884 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-10-04 22:03:46,886 - DEBUG - send_request_body.complete
+2024-10-04 22:03:46,886 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-10-04 22:03:48,823 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 04 Oct 2024 20:03:48 GMT'), (b'Content-Type', b'application/json'), (b'Content-Length', b'45'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-jdviku2yvsghjue6dnsod5vf'), (b'openai-processing-ms', b'544'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'500'), (b'x-ratelimit-remaining-requests', b'499'), (b'x-ratelimit-reset-requests', b'120ms'), (b'x-request-id', b'req_f672d834151aeb744902c311c57742c3'), (b'CF-Cache-Status', b'DYNAMIC'), (b'Set-Cookie', b'__cf_bm=kRya3798rMTkFbHESHZddLMKRdpcVpGwM.n.BH4X3Gk-1728072228-1.0.1.1-w7mZrhfphPbBzj1RCA8sByJw57N_5cGLJMj1prFQMvftQNT_WwVJGFqRoLBZJ9aylmi.VJrdt42looGO3pviMg; path=/; expires=Fri, 04-Oct-24 20:33:48 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'X-Content-Type-Options', b'nosniff'), (b'Set-Cookie', b'_cfuvid=GoQKUzAhAe1TbI.lGJFFiIp8TK6sgPta3r2w7lEpX_Y-1728072228815-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8cd7c6fa4dbb2c0a-STR'), (b'alt-svc', b'h3=":443"; ma=86400')])
+2024-10-04 22:03:48,824 - INFO - HTTP Request: POST https://api.openai.com/v1/audio/transcriptions "HTTP/1.1 200 OK"
+2024-10-04 22:03:48,825 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-10-04 22:03:48,825 - DEBUG - receive_response_body.complete
+2024-10-04 22:03:48,825 - DEBUG - response_closed.started
+2024-10-04 22:03:48,825 - DEBUG - response_closed.complete
+2024-10-04 22:03:48,825 - DEBUG - HTTP Response: POST https://api.openai.com/v1/audio/transcriptions "200 OK" Headers([('date', 'Fri, 04 Oct 2024 20:03:48 GMT'), ('content-type', 'application/json'), ('content-length', '45'), ('connection', 'keep-alive'), ('access-control-expose-headers', 'X-Request-ID'), ('openai-organization', 'user-jdviku2yvsghjue6dnsod5vf'), ('openai-processing-ms', '544'), ('openai-version', '2020-10-01'), ('strict-transport-security', 'max-age=31536000; includeSubDomains; preload'), ('x-ratelimit-limit-requests', '500'), ('x-ratelimit-remaining-requests', '499'), ('x-ratelimit-reset-requests', '120ms'), ('x-request-id', 'req_f672d834151aeb744902c311c57742c3'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=kRya3798rMTkFbHESHZddLMKRdpcVpGwM.n.BH4X3Gk-1728072228-1.0.1.1-w7mZrhfphPbBzj1RCA8sByJw57N_5cGLJMj1prFQMvftQNT_WwVJGFqRoLBZJ9aylmi.VJrdt42looGO3pviMg; path=/; expires=Fri, 04-Oct-24 20:33:48 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('x-content-type-options', 'nosniff'), ('set-cookie', '_cfuvid=GoQKUzAhAe1TbI.lGJFFiIp8TK6sgPta3r2w7lEpX_Y-1728072228815-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('server', 'cloudflare'), ('cf-ray', '8cd7c6fa4dbb2c0a-STR'), ('alt-svc', 'h3=":443"; ma=86400')])
+2024-10-04 22:03:48,825 - DEBUG - request_id: req_f672d834151aeb744902c311c57742c3
+2024-10-04 22:03:48,826 - INFO - Transcription completed successfully
+2024-10-04 22:03:48,826 - INFO - Transcription saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_220342.txt
+2024-10-04 22:03:48,826 - INFO - Temporary audio file /tmp/tmpz050ygns/recorded_audio.wav removed
+2024-10-04 22:03:52,083 - INFO - Starting audio recording...
+2024-10-04 22:03:59,670 - INFO - Audio recording completed.
+2024-10-04 22:03:59,672 - INFO - Audio saved to /tmp/tmpz050ygns/recorded_audio.wav
+2024-10-04 22:03:59,672 - INFO - Starting transcription of /tmp/tmpz050ygns/recorded_audio.wav (Attempt 1)
+2024-10-04 22:03:59,673 - DEBUG - Request options: {'method': 'post', 'url': '/audio/transcriptions', 'headers': {'Content-Type': 'multipart/form-data'}, 'files': [('file', SerializationIterator(index=0, iterator=SerializationIterator(index=0, iterator=<_io.BufferedReader name='/tmp/tmpz050ygns/recorded_audio.wav'>)))], 'json_data': {'model': 'whisper-1'}}
+2024-10-04 22:03:59,675 - DEBUG - Sending HTTP Request: POST https://api.openai.com/v1/audio/transcriptions
+2024-10-04 22:03:59,675 - DEBUG - close.started
+2024-10-04 22:03:59,676 - DEBUG - close.complete
+2024-10-04 22:03:59,676 - DEBUG - connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2024-10-04 22:03:59,726 - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f57d0a8f880>
+2024-10-04 22:03:59,726 - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x7f57d0c226c0> server_hostname='api.openai.com' timeout=5.0
+2024-10-04 22:03:59,734 - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f57d0a8f730>
+2024-10-04 22:03:59,734 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-10-04 22:03:59,735 - DEBUG - send_request_headers.complete
+2024-10-04 22:03:59,735 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-10-04 22:03:59,736 - DEBUG - send_request_body.complete
+2024-10-04 22:03:59,736 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-10-04 22:04:01,580 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 04 Oct 2024 20:04:01 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-jdviku2yvsghjue6dnsod5vf'), (b'openai-processing-ms', b'651'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'500'), (b'x-ratelimit-remaining-requests', b'499'), (b'x-ratelimit-reset-requests', b'120ms'), (b'x-request-id', b'req_887c08e491989629a9699c6e07a6ae64'), (b'CF-Cache-Status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8cd7c74aaef82c0a-STR'), (b'Content-Encoding', b'gzip')])
+2024-10-04 22:04:01,581 - INFO - HTTP Request: POST https://api.openai.com/v1/audio/transcriptions "HTTP/1.1 200 OK"
+2024-10-04 22:04:01,582 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-10-04 22:04:01,582 - DEBUG - receive_response_body.complete
+2024-10-04 22:04:01,582 - DEBUG - response_closed.started
+2024-10-04 22:04:01,582 - DEBUG - response_closed.complete
+2024-10-04 22:04:01,582 - DEBUG - HTTP Response: POST https://api.openai.com/v1/audio/transcriptions "200 OK" Headers({'date': 'Fri, 04 Oct 2024 20:04:01 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-expose-headers': 'X-Request-ID', 'openai-organization': 'user-jdviku2yvsghjue6dnsod5vf', 'openai-processing-ms': '651', 'openai-version': '2020-10-01', 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'x-ratelimit-limit-requests': '500', 'x-ratelimit-remaining-requests': '499', 'x-ratelimit-reset-requests': '120ms', 'x-request-id': 'req_887c08e491989629a9699c6e07a6ae64', 'cf-cache-status': 'DYNAMIC', 'x-content-type-options': 'nosniff', 'server': 'cloudflare', 'cf-ray': '8cd7c74aaef82c0a-STR', 'content-encoding': 'gzip'})
+2024-10-04 22:04:01,583 - DEBUG - request_id: req_887c08e491989629a9699c6e07a6ae64
+2024-10-04 22:04:01,583 - INFO - Transcription completed successfully
+2024-10-04 22:04:01,584 - INFO - Transcription saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_220342.txt
+2024-10-04 22:04:01,584 - INFO - Temporary audio file /tmp/tmpz050ygns/recorded_audio.wav removed
+2024-10-04 22:04:07,581 - INFO - Starting audio recording...
+2024-10-04 22:04:13,891 - INFO - Audio recording completed.
+2024-10-04 22:04:13,892 - WARNING - Recording appears to be silence or very low volume.
+2024-10-04 22:04:19,208 - INFO - Starting audio recording...
+2024-10-04 22:04:24,470 - INFO - Audio recording completed.
+2024-10-04 22:04:24,471 - WARNING - Recording appears to be silence or very low volume.
+2024-10-04 22:04:27,438 - INFO - Starting audio recording...
+2024-10-04 22:04:35,200 - INFO - Audio recording completed.
+2024-10-04 22:04:35,201 - WARNING - Recording appears to be silence or very low volume.
+2024-10-04 22:05:54,671 - INFO - Temporary directory /tmp/tmpz050ygns removed
+2024-10-04 22:05:54,855 - DEBUG - close.started
+2024-10-04 22:05:54,856 - DEBUG - close.complete
+2024-10-04 22:05:57,907 - DEBUG - load_ssl_context verify=True cert=None trust_env=True http2=False
+2024-10-04 22:05:57,909 - DEBUG - load_verify_locations cafile='/home/samko/.pyenv/versions/3.10.15/envs/venv_tests/lib/python3.10/site-packages/certifi/cacert.pem'
+2024-10-04 22:05:57,917 - INFO - Temporary audio file will be saved as: /tmp/tmpd44r1tgh/recorded_audio.wav
+2024-10-04 22:05:57,917 - INFO - Transcriptions will be saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_220557.txt
+2024-10-04 22:05:57,918 - INFO - Starting audio recording...
+2024-10-04 22:06:03,190 - INFO - Audio recording completed.
+2024-10-04 22:06:03,192 - WARNING - Recording appears to be very quiet (RMS: 0.0050).
+2024-10-04 22:06:03,193 - INFO - Starting transcription of /tmp/tmpd44r1tgh/recorded_audio.wav (Attempt 1)
+2024-10-04 22:06:03,195 - DEBUG - Request options: {'method': 'post', 'url': '/audio/transcriptions', 'headers': {'Content-Type': 'multipart/form-data'}, 'files': [('file', SerializationIterator(index=0, iterator=SerializationIterator(index=0, iterator=<_io.BufferedReader name='/tmp/tmpd44r1tgh/recorded_audio.wav'>)))], 'json_data': {'model': 'whisper-1'}}
+2024-10-04 22:06:03,204 - DEBUG - Sending HTTP Request: POST https://api.openai.com/v1/audio/transcriptions
+2024-10-04 22:06:03,205 - DEBUG - connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2024-10-04 22:06:03,259 - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f5b80b79ea0>
+2024-10-04 22:06:03,260 - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x7f5b80d126c0> server_hostname='api.openai.com' timeout=5.0
+2024-10-04 22:06:03,267 - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f5b80b79e70>
+2024-10-04 22:06:03,267 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-10-04 22:06:03,268 - DEBUG - send_request_headers.complete
+2024-10-04 22:06:03,268 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-10-04 22:06:03,270 - DEBUG - send_request_body.complete
+2024-10-04 22:06:03,270 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-10-04 22:06:04,689 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 04 Oct 2024 20:06:04 GMT'), (b'Content-Type', b'application/json'), (b'Content-Length', b'38'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-jdviku2yvsghjue6dnsod5vf'), (b'openai-processing-ms', b'468'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'500'), (b'x-ratelimit-remaining-requests', b'499'), (b'x-ratelimit-reset-requests', b'120ms'), (b'x-request-id', b'req_b696708b0aaa82f46ccc1989dbf37c20'), (b'CF-Cache-Status', b'DYNAMIC'), (b'Set-Cookie', b'__cf_bm=SPA8iwehJNclEp6xjoQ38h0Oku.y.LMzdilTeL1zBK0-1728072364-1.0.1.1-jwahjxTD6J4OVVoB1DCGm1w90a5Ex2lGqT9ezNeB0QzdnQW2uIXZxpxNxHlOcAi4gL.N2CqVji899uwhYnUjvA; path=/; expires=Fri, 04-Oct-24 20:36:04 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'X-Content-Type-Options', b'nosniff'), (b'Set-Cookie', b'_cfuvid=5vu2dRcbaRT5KUetjdfgOQPReE92Js1S5djvrIq4K3U-1728072364729-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8cd7ca4ec9092c0c-STR')])
+2024-10-04 22:06:04,690 - INFO - HTTP Request: POST https://api.openai.com/v1/audio/transcriptions "HTTP/1.1 200 OK"
+2024-10-04 22:06:04,691 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-10-04 22:06:04,691 - DEBUG - receive_response_body.complete
+2024-10-04 22:06:04,691 - DEBUG - response_closed.started
+2024-10-04 22:06:04,691 - DEBUG - response_closed.complete
+2024-10-04 22:06:04,691 - DEBUG - HTTP Response: POST https://api.openai.com/v1/audio/transcriptions "200 OK" Headers([('date', 'Fri, 04 Oct 2024 20:06:04 GMT'), ('content-type', 'application/json'), ('content-length', '38'), ('connection', 'keep-alive'), ('access-control-expose-headers', 'X-Request-ID'), ('openai-organization', 'user-jdviku2yvsghjue6dnsod5vf'), ('openai-processing-ms', '468'), ('openai-version', '2020-10-01'), ('strict-transport-security', 'max-age=31536000; includeSubDomains; preload'), ('x-ratelimit-limit-requests', '500'), ('x-ratelimit-remaining-requests', '499'), ('x-ratelimit-reset-requests', '120ms'), ('x-request-id', 'req_b696708b0aaa82f46ccc1989dbf37c20'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=SPA8iwehJNclEp6xjoQ38h0Oku.y.LMzdilTeL1zBK0-1728072364-1.0.1.1-jwahjxTD6J4OVVoB1DCGm1w90a5Ex2lGqT9ezNeB0QzdnQW2uIXZxpxNxHlOcAi4gL.N2CqVji899uwhYnUjvA; path=/; expires=Fri, 04-Oct-24 20:36:04 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('x-content-type-options', 'nosniff'), ('set-cookie', '_cfuvid=5vu2dRcbaRT5KUetjdfgOQPReE92Js1S5djvrIq4K3U-1728072364729-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('server', 'cloudflare'), ('cf-ray', '8cd7ca4ec9092c0c-STR')])
+2024-10-04 22:06:04,691 - DEBUG - request_id: req_b696708b0aaa82f46ccc1989dbf37c20
+2024-10-04 22:06:04,692 - INFO - Transcription completed successfully
+2024-10-04 22:06:04,692 - INFO - Transcription saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_220557.txt
+2024-10-04 22:06:04,693 - INFO - Temporary audio file /tmp/tmpd44r1tgh/recorded_audio.wav removed
+2024-10-04 22:06:06,412 - INFO - Starting audio recording...
+2024-10-04 22:06:12,784 - INFO - Audio recording completed.
+2024-10-04 22:06:12,785 - WARNING - Recording appears to be very quiet (RMS: 0.0056).
+2024-10-04 22:06:12,786 - INFO - Starting transcription of /tmp/tmpd44r1tgh/recorded_audio.wav (Attempt 1)
+2024-10-04 22:06:12,787 - DEBUG - Request options: {'method': 'post', 'url': '/audio/transcriptions', 'headers': {'Content-Type': 'multipart/form-data'}, 'files': [('file', SerializationIterator(index=0, iterator=SerializationIterator(index=0, iterator=<_io.BufferedReader name='/tmp/tmpd44r1tgh/recorded_audio.wav'>)))], 'json_data': {'model': 'whisper-1'}}
+2024-10-04 22:06:12,788 - DEBUG - Sending HTTP Request: POST https://api.openai.com/v1/audio/transcriptions
+2024-10-04 22:06:12,789 - DEBUG - close.started
+2024-10-04 22:06:12,789 - DEBUG - close.complete
+2024-10-04 22:06:12,789 - DEBUG - connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2024-10-04 22:06:12,826 - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f5b80be8100>
+2024-10-04 22:06:12,826 - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x7f5b80d126c0> server_hostname='api.openai.com' timeout=5.0
+2024-10-04 22:06:12,835 - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f5b80b7bb20>
+2024-10-04 22:06:12,835 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-10-04 22:06:12,836 - DEBUG - send_request_headers.complete
+2024-10-04 22:06:12,836 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-10-04 22:06:12,838 - DEBUG - send_request_body.complete
+2024-10-04 22:06:12,838 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-10-04 22:06:14,194 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 04 Oct 2024 20:06:14 GMT'), (b'Content-Type', b'application/json'), (b'Content-Length', b'31'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-jdviku2yvsghjue6dnsod5vf'), (b'openai-processing-ms', b'477'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'500'), (b'x-ratelimit-remaining-requests', b'499'), (b'x-ratelimit-reset-requests', b'120ms'), (b'x-request-id', b'req_5151ab0e028a99794ed248e2789b676b'), (b'CF-Cache-Status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8cd7ca8a8f172c0f-STR')])
+2024-10-04 22:06:14,195 - INFO - HTTP Request: POST https://api.openai.com/v1/audio/transcriptions "HTTP/1.1 200 OK"
+2024-10-04 22:06:14,195 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-10-04 22:06:14,195 - DEBUG - receive_response_body.complete
+2024-10-04 22:06:14,195 - DEBUG - response_closed.started
+2024-10-04 22:06:14,196 - DEBUG - response_closed.complete
+2024-10-04 22:06:14,196 - DEBUG - HTTP Response: POST https://api.openai.com/v1/audio/transcriptions "200 OK" Headers({'date': 'Fri, 04 Oct 2024 20:06:14 GMT', 'content-type': 'application/json', 'content-length': '31', 'connection': 'keep-alive', 'access-control-expose-headers': 'X-Request-ID', 'openai-organization': 'user-jdviku2yvsghjue6dnsod5vf', 'openai-processing-ms': '477', 'openai-version': '2020-10-01', 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'x-ratelimit-limit-requests': '500', 'x-ratelimit-remaining-requests': '499', 'x-ratelimit-reset-requests': '120ms', 'x-request-id': 'req_5151ab0e028a99794ed248e2789b676b', 'cf-cache-status': 'DYNAMIC', 'x-content-type-options': 'nosniff', 'server': 'cloudflare', 'cf-ray': '8cd7ca8a8f172c0f-STR'})
+2024-10-04 22:06:14,196 - DEBUG - request_id: req_5151ab0e028a99794ed248e2789b676b
+2024-10-04 22:06:14,196 - INFO - Transcription completed successfully
+2024-10-04 22:06:14,197 - INFO - Transcription saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_220557.txt
+2024-10-04 22:06:14,197 - INFO - Temporary audio file /tmp/tmpd44r1tgh/recorded_audio.wav removed
+2024-10-04 22:06:16,781 - INFO - Starting audio recording...
+2024-10-04 22:06:23,645 - INFO - Audio recording completed.
+2024-10-04 22:06:23,647 - WARNING - Recording appears to be very quiet (RMS: 0.0064).
+2024-10-04 22:06:23,648 - INFO - Starting transcription of /tmp/tmpd44r1tgh/recorded_audio.wav (Attempt 1)
+2024-10-04 22:06:23,649 - DEBUG - Request options: {'method': 'post', 'url': '/audio/transcriptions', 'headers': {'Content-Type': 'multipart/form-data'}, 'files': [('file', SerializationIterator(index=0, iterator=SerializationIterator(index=0, iterator=<_io.BufferedReader name='/tmp/tmpd44r1tgh/recorded_audio.wav'>)))], 'json_data': {'model': 'whisper-1'}}
+2024-10-04 22:06:23,650 - DEBUG - Sending HTTP Request: POST https://api.openai.com/v1/audio/transcriptions
+2024-10-04 22:06:23,651 - DEBUG - close.started
+2024-10-04 22:06:23,651 - DEBUG - close.complete
+2024-10-04 22:06:23,651 - DEBUG - connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+2024-10-04 22:06:23,680 - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f5b80be95a0>
+2024-10-04 22:06:23,681 - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x7f5b80d126c0> server_hostname='api.openai.com' timeout=5.0
+2024-10-04 22:06:23,690 - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7f5b80be9450>
+2024-10-04 22:06:23,690 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2024-10-04 22:06:23,691 - DEBUG - send_request_headers.complete
+2024-10-04 22:06:23,691 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2024-10-04 22:06:23,694 - DEBUG - send_request_body.complete
+2024-10-04 22:06:23,694 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2024-10-04 22:06:24,939 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 04 Oct 2024 20:06:24 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-jdviku2yvsghjue6dnsod5vf'), (b'openai-processing-ms', b'537'), (b'openai-version', b'2020-10-01'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'x-ratelimit-limit-requests', b'500'), (b'x-ratelimit-remaining-requests', b'499'), (b'x-ratelimit-reset-requests', b'120ms'), (b'x-request-id', b'req_d95d86187c5260f8a54a2777f9f69956'), (b'CF-Cache-Status', b'DYNAMIC'), (b'X-Content-Type-Options', b'nosniff'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8cd7cace5dde2c0a-STR'), (b'Content-Encoding', b'gzip')])
+2024-10-04 22:06:24,940 - INFO - HTTP Request: POST https://api.openai.com/v1/audio/transcriptions "HTTP/1.1 200 OK"
+2024-10-04 22:06:24,941 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2024-10-04 22:06:24,942 - DEBUG - receive_response_body.complete
+2024-10-04 22:06:24,942 - DEBUG - response_closed.started
+2024-10-04 22:06:24,942 - DEBUG - response_closed.complete
+2024-10-04 22:06:24,943 - DEBUG - HTTP Response: POST https://api.openai.com/v1/audio/transcriptions "200 OK" Headers({'date': 'Fri, 04 Oct 2024 20:06:24 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-expose-headers': 'X-Request-ID', 'openai-organization': 'user-jdviku2yvsghjue6dnsod5vf', 'openai-processing-ms': '537', 'openai-version': '2020-10-01', 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload', 'x-ratelimit-limit-requests': '500', 'x-ratelimit-remaining-requests': '499', 'x-ratelimit-reset-requests': '120ms', 'x-request-id': 'req_d95d86187c5260f8a54a2777f9f69956', 'cf-cache-status': 'DYNAMIC', 'x-content-type-options': 'nosniff', 'server': 'cloudflare', 'cf-ray': '8cd7cace5dde2c0a-STR', 'content-encoding': 'gzip'})
+2024-10-04 22:06:24,943 - DEBUG - request_id: req_d95d86187c5260f8a54a2777f9f69956
+2024-10-04 22:06:24,944 - INFO - Transcription completed successfully
+2024-10-04 22:06:24,944 - INFO - Transcription saved to /home/samko/Documents/GitHub/script_test/data/transcriptions/transcription_20241004_220557.txt
+2024-10-04 22:06:24,945 - INFO - Temporary audio file /tmp/tmpd44r1tgh/recorded_audio.wav removed
