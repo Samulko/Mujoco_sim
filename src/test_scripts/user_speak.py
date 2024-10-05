@@ -126,20 +126,11 @@ def record_audio(filename, sample_rate=16000):
         wav.write(filename, sample_rate, recording)
         logging.info(f"Audio saved to {filename}")
         
-        # Normalize the audio
-        audio = AudioSegment.from_wav(filename)
-        normalized_audio = normalize_audio(audio)
-        normalized_audio.export(filename, format="wav")
-        
         return filename
     except Exception as e:
         logging.error(f"Error in record_audio: {str(e)}", exc_info=True)
         print(f"An error occurred while recording audio: {str(e)}")
         return None
-
-def normalize_audio(audio_data, target_dBFS=-20.0):
-    change_in_dBFS = target_dBFS - audio_data.dBFS
-    return audio_data.apply_gain(change_in_dBFS)
 
 def transcribe_audio(filename, max_retries=3):
     for attempt in range(max_retries):
@@ -168,7 +159,7 @@ def generate_response(prompt, conversation_history):
         messages.append({"role": "user", "content": prompt})
         
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=messages
         )
         return response.choices[0].message.content
@@ -241,9 +232,6 @@ def main():
 
         while True:
             try:
-                # Reset audio stream before each recording
-                reset_audio_stream()
-                
                 # Set up the timeout
                 signal.signal(signal.SIGALRM, timeout_handler)
                 signal.alarm(TIMEOUT)
@@ -342,6 +330,9 @@ def main():
             import shutil
             shutil.rmtree(temp_dir)
             logging.info(f"Temporary directory {temp_dir} removed")
+
+        # Ensure all audio streams are stopped
+        sd.stop()
 
 if __name__ == "__main__":
     main()
