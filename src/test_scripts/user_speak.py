@@ -7,6 +7,7 @@ from datetime import datetime
 import logging
 from dotenv import load_dotenv
 import tempfile
+from collections import deque
 import threading
 import time
 import sys
@@ -160,11 +161,15 @@ def transcribe_audio(filename, max_retries=3):
                 print("Max retries reached. Transcription failed.")
                 raise
 
-def generate_response(prompt):
+def generate_response(prompt, conversation_history):
     try:
+        messages = [{"role": "system", "content": "You are a helpful assistant."}]
+        messages.extend(conversation_history)
+        messages.append({"role": "user", "content": prompt})
+        
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
+            messages=messages
         )
         return response.choices[0].message.content
     except Exception as e:
@@ -216,6 +221,7 @@ def main():
     temp_dir = None
     silent_recordings = 0
     max_silent_recordings = 3
+    conversation_history = deque(maxlen=5)  # Store last 5 exchanges
     try:
         # Use a temporary directory for audio files
         temp_dir = tempfile.mkdtemp()
@@ -273,7 +279,7 @@ def main():
                     logging.info(f"Transcription saved to {transcription_filename}")
 
                     # Generate response
-                    response = generate_response(transcription)
+                    response = generate_response(transcription, conversation_history)
                     if response:
                         print("Response:")
                         print(response)
@@ -284,6 +290,10 @@ def main():
                         
                         # Convert response to speech and play it
                         text_to_speech(response)
+
+                        # Update conversation history
+                        conversation_history.append({"role": "user", "content": transcription})
+                        conversation_history.append({"role": "assistant", "content": response})
 
                 except Exception as e:
                     print(f"Transcription or response generation failed: {str(e)}")
