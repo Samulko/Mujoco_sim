@@ -1,6 +1,40 @@
-from .main import main
+import os
+import logging
+from datetime import datetime
+import tempfile
+from collections import deque
+import time
+import sys
+import signal
+import shutil
+from dotenv import load_dotenv
 
-__all__ = ['main']
+from .audio_utils import set_alsa_params, record_audio
+from .openai_utils import transcribe_audio, generate_response, text_to_speech
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Set up logging
+log_dir = os.path.expanduser("~/Documents/GitHub/script_test/logs")
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, "user_speak.log")
+logging.basicConfig(filename=log_file, level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Check for OpenAI API key
+if not os.getenv("OPENAI_API_KEY"):
+    print("Error: OPENAI_API_KEY not found in environment variables.")
+    logging.error("OPENAI_API_KEY not found in environment variables.")
+    sys.exit(1)
+
+# Add this at the top of the file
+TIMEOUT = 60  # 60 seconds timeout for recording
+
+def timeout_handler(signum, frame):
+    raise TimeoutError("Recording timed out")
+
+def main():
     set_alsa_params()
     temp_dir = None
     silent_recordings = 0
