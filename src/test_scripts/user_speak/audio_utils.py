@@ -5,6 +5,7 @@ import logging
 import threading
 import time
 import ctypes
+import queue
 
 def set_alsa_params():
     try:
@@ -19,50 +20,48 @@ def reset_audio_stream(sample_rate=16000):
     sd.default.channels = 1
     sd.default.dtype = 'int16'
 
-def record_audio(filename, sample_rate=16000):
+def record_audio(filename, sample_rate=16000, max_duration=60):
     try:
         logging.info("Starting audio recording...")
         print("Press Enter to start recording, press Enter again to stop.")
         
-        recording = []
-        is_recording = False
-        
-        def input_thread():
-            nonlocal is_recording
-            while True:
-                input()
-                is_recording = not is_recording
-                if is_recording:
-                    print("Recording... (Press Enter to stop)")
-                else:
-                    print("Recording stopped.")
-                    break
+        q = queue.Queue()
         
         def audio_callback(indata, frames, time, status):
-            if is_recording:
-                recording.append(indata.copy())
+            if status:
+                print(status, file=sys.stderr)
+            q.put(indata.copy())
         
-        input_thread = threading.Thread(target=input_thread, daemon=True)
-        input_thread.start()
+        def input_thread(event):
+            input()
+            event.set()
+        
+        event = threading.Event()
+        thread = threading.Thread(target=input_thread, args=(event,))
+        thread.start()
         
         reset_audio_stream(sample_rate)
         
         with sd.InputStream(samplerate=sample_rate, channels=1, callback=audio_callback):
-            while is_recording or not recording:
-                time.sleep(0.1)
+            print("Recording... (Press Enter to stop)")
+            thread.join()
         
-        # Ensure the input thread is properly terminated
-        input_thread.join(timeout=1)
+        recording = []
         
-        if not recording:
+        try:
+            while True:
+                recording.append(q.get_nowait())
+        except queue.Empty:
+            pass
+        
+        recording = np.concatenate(recording, axis=0)
+        
+        if len(recording) == 0:
             print("No audio recorded.")
             return None
         
         print("\nRecording finished.")
         logging.info("Audio recording completed.")
-        
-        # Concatenate all recorded chunks
-        recording = np.concatenate(recording, axis=0)
         
         # Normalize the recording to 16-bit range
         max_value = np.max(np.abs(recording))
@@ -76,9 +75,6 @@ def record_audio(filename, sample_rate=16000):
         wav.write(filename, sample_rate, recording)
         logging.info(f"Audio saved to {filename}")
         
-        # Add a small delay to allow resources to be released
-        time.sleep(0.5)
-        
         return filename
     except Exception as e:
         logging.error(f"Error in record_audio: {str(e)}", exc_info=True)
@@ -87,3 +83,4 @@ def record_audio(filename, sample_rate=16000):
     finally:
         # Ensure audio stream is stopped and resources are released
         sd.stop()
+        time.sleep(0.5)

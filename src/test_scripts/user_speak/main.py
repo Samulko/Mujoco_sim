@@ -85,6 +85,10 @@ def main():
                 # Transcribe audio using Whisper API
                 try:
                     transcription = transcribe_audio(recorded_file)
+                    if not transcription:
+                        print("Transcription failed. Please try again.")
+                        continue
+                    
                     print("Transcription:")
                     print(transcription)
 
@@ -109,10 +113,12 @@ def main():
                         # Update conversation history
                         conversation_history.append({"role": "user", "content": transcription})
                         conversation_history.append({"role": "assistant", "content": response})
+                    else:
+                        print("Failed to generate a response. Please try again.")
 
                 except Exception as e:
-                    print(f"Transcription or response generation failed: {str(e)}")
-                    logging.error(f"Transcription or response generation failed: {str(e)}")
+                    print(f"An error occurred during processing: {str(e)}")
+                    logging.error(f"Error during processing: {str(e)}", exc_info=True)
 
                 # Remove the temporary audio file
                 if os.path.exists(audio_filename):
