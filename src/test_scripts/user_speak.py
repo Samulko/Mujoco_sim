@@ -15,6 +15,14 @@ import io
 from pydub import AudioSegment
 from pydub.playback import play
 import subprocess
+import ctypes
+
+def set_alsa_params():
+    try:
+        asound = ctypes.cdll.LoadLibrary('libasound.so')
+        asound.snd_lib_error_set_handler(None)
+    except:
+        pass  # If it fails, we'll just continue without it
 
 def reset_audio_stream(sample_rate=16000):
     sd.stop()
@@ -86,8 +94,9 @@ def record_audio(filename, sample_rate=16000):
         def audio_callback(indata, frames, time, status):
             if is_recording:
                 recording.append(indata.copy())
-                volume_norm = np.linalg.norm(indata) * 10
-                print(f"Recording volume: {'#' * int(volume_norm)}", end='\r')
+                if len(recording) % 10 == 0:  # Update every 10 frames
+                    volume_norm = np.linalg.norm(indata) * 10
+                    print(f"Recording volume: {'#' * min(int(volume_norm), 50)}", end='\r')
         
         threading.Thread(target=input_thread, daemon=True).start()
         
@@ -118,11 +127,21 @@ def record_audio(filename, sample_rate=16000):
         
         wav.write(filename, sample_rate, recording)
         logging.info(f"Audio saved to {filename}")
+        
+        # Normalize the audio
+        audio = AudioSegment.from_wav(filename)
+        normalized_audio = normalize_audio(audio)
+        normalized_audio.export(filename, format="wav")
+        
         return filename
     except Exception as e:
         logging.error(f"Error in record_audio: {str(e)}", exc_info=True)
         print(f"An error occurred while recording audio: {str(e)}")
         return None
+
+def normalize_audio(audio_data, target_dBFS=-20.0):
+    change_in_dBFS = target_dBFS - audio_data.dBFS
+    return audio_data.apply_gain(change_in_dBFS)
 
 def transcribe_audio(filename, max_retries=3):
     for attempt in range(max_retries):
@@ -170,6 +189,8 @@ def text_to_speech(text):
         # Play the audio
         play(audio)
         
+        time.sleep(0.5)  # Add a small delay after playback
+        
         logging.info("Text-to-speech playback completed")
     except Exception as e:
         logging.error(f"Error in text_to_speech: {str(e)}", exc_info=True)
@@ -182,6 +203,7 @@ def timeout_handler(signum, frame):
     raise TimeoutError("Recording timed out")
 
 def main():
+    set_alsa_params()
     temp_dir = None
     silent_recordings = 0
     max_silent_recordings = 3
