@@ -11,6 +11,9 @@ import threading
 import time
 import sys
 import signal
+import io
+from pydub import AudioSegment
+from pydub.playback import play
 
 # Load environment variables from .env file
 load_dotenv()
@@ -108,6 +111,37 @@ def transcribe_audio(filename, max_retries=3):
                 print("Max retries reached. Transcription failed.")
                 raise
 
+def generate_response(prompt):
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        logging.error(f"Error in generate_response: {str(e)}", exc_info=True)
+        print(f"An error occurred while generating response: {str(e)}")
+        return None
+
+def text_to_speech(text):
+    try:
+        response = client.audio.speech.create(
+            model="tts-1",
+            voice="alloy",
+            input=text
+        )
+        
+        # Convert the binary response content to an AudioSegment
+        audio = AudioSegment.from_mp3(io.BytesIO(response.content))
+        
+        # Play the audio
+        play(audio)
+        
+        logging.info("Text-to-speech playback completed")
+    except Exception as e:
+        logging.error(f"Error in text_to_speech: {str(e)}", exc_info=True)
+        print(f"An error occurred during text-to-speech: {str(e)}")
+
 # Add this at the top of the file
 TIMEOUT = 60  # 60 seconds timeout for recording
 
@@ -170,9 +204,23 @@ def main():
                     with open(transcription_filename, "a") as f:
                         f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: {transcription}\n\n")
                     logging.info(f"Transcription saved to {transcription_filename}")
+
+                    # Generate response
+                    response = generate_response(transcription)
+                    if response:
+                        print("Response:")
+                        print(response)
+                        
+                        # Save the response to the transcription file
+                        with open(transcription_filename, "a") as f:
+                            f.write(f"Response: {response}\n\n")
+                        
+                        # Convert response to speech and play it
+                        text_to_speech(response)
+
                 except Exception as e:
-                    print(f"Transcription failed: {str(e)}")
-                    logging.error(f"Transcription failed: {str(e)}")
+                    print(f"Transcription or response generation failed: {str(e)}")
+                    logging.error(f"Transcription or response generation failed: {str(e)}")
 
                 # Remove the temporary audio file
                 if os.path.exists(audio_filename):
