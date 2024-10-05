@@ -28,17 +28,63 @@ if not os.getenv("OPENAI_API_KEY"):
     logging.error("OPENAI_API_KEY not found in environment variables.")
     sys.exit(1)
 
-# Add this at the top of the file
 TIMEOUT = 60  # 60 seconds timeout for recording
 
 def timeout_handler(signum, frame):
     raise TimeoutError("Recording timed out")
 
+def handle_conversation(audio_filename, transcription_filename, conversation_history):
+    try:
+        # Record audio and save it to WAV file
+        recorded_file = record_audio(audio_filename)
+        
+        if recorded_file is None:
+            print("No valid audio recorded. Please try again.")
+            return False
+
+        # Transcribe audio using Whisper API
+        transcription = transcribe_audio(recorded_file)
+        if not transcription:
+            print("Transcription failed. Please try again.")
+            return False
+        
+        print("Transcription:")
+        print(transcription)
+
+        # Save the transcription to a file
+        with open(transcription_filename, "a") as f:
+            f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: {transcription}\n\n")
+        logging.info(f"Transcription saved to {transcription_filename}")
+
+        # Generate response
+        response = generate_response(transcription, conversation_history)
+        if response:
+            print("Response:")
+            print(response)
+            
+            # Save the response to the transcription file
+            with open(transcription_filename, "a") as f:
+                f.write(f"Response: {response}\n\n")
+            
+            # Convert response to speech and play it
+            text_to_speech(response)
+
+            # Update conversation history
+            conversation_history.append({"role": "user", "content": transcription})
+            conversation_history.append({"role": "assistant", "content": response})
+        else:
+            print("Failed to generate a response. Please try again.")
+
+        return True
+
+    except Exception as e:
+        print(f"An error occurred during processing: {str(e)}")
+        logging.error(f"Error during processing: {str(e)}", exc_info=True)
+        return False
+
 def main():
     set_alsa_params()
     temp_dir = None
-    silent_recordings = 0
-    max_silent_recordings = 3
     conversation_history = deque(maxlen=5)  # Store last 5 exchanges
     try:
         # Use a temporary directory for audio files
@@ -63,73 +109,27 @@ def main():
                 signal.signal(signal.SIGALRM, timeout_handler)
                 signal.alarm(TIMEOUT)
 
-                # Record audio and save it to WAV file
-                recorded_file = record_audio(audio_filename)
+                print("Press Enter to start recording, or 'q' to quit.")
+                user_input = input().lower()
+                if user_input == 'q':
+                    print("Quitting the program...")
+                    break
+
+                success = handle_conversation(audio_filename, transcription_filename, conversation_history)
                 
                 # Cancel the alarm
                 signal.alarm(0)
 
-                if recorded_file is None:
-                    silent_recordings += 1
-                    print(f"No valid audio recorded. ({silent_recordings}/{max_silent_recordings})")
-                    if silent_recordings >= max_silent_recordings:
-                        print(f"Maximum number of silent recordings ({max_silent_recordings}) reached. Exiting...")
-                        break
+                if not success:
                     print("Try again or enter 'q' to quit.")
                     if input().lower() == 'q':
                         print("Quitting the program...")
-                        return
-                    continue
-                silent_recordings = 0  # Reset silent recordings counter
-
-                # Transcribe audio using Whisper API
-                try:
-                    transcription = transcribe_audio(recorded_file)
-                    if not transcription:
-                        print("Transcription failed. Please try again.")
-                        continue
-                    
-                    print("Transcription:")
-                    print(transcription)
-
-                    # Save the transcription to a file
-                    with open(transcription_filename, "a") as f:
-                        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: {transcription}\n\n")
-                    logging.info(f"Transcription saved to {transcription_filename}")
-
-                    # Generate response
-                    response = generate_response(transcription, conversation_history)
-                    if response:
-                        print("Response:")
-                        print(response)
-                        
-                        # Save the response to the transcription file
-                        with open(transcription_filename, "a") as f:
-                            f.write(f"Response: {response}\n\n")
-                        
-                        # Convert response to speech and play it
-                        text_to_speech(response)
-
-                        # Update conversation history
-                        conversation_history.append({"role": "user", "content": transcription})
-                        conversation_history.append({"role": "assistant", "content": response})
-                    else:
-                        print("Failed to generate a response. Please try again.")
-
-                except Exception as e:
-                    print(f"An error occurred during processing: {str(e)}")
-                    logging.error(f"Error during processing: {str(e)}", exc_info=True)
+                        break
 
                 # Remove the temporary audio file
                 if os.path.exists(audio_filename):
                     os.remove(audio_filename)
                     logging.info(f"Temporary audio file {audio_filename} removed")
-
-                print("Press Enter to record again, or 'q' to quit.")
-                user_input = input().lower()
-                if user_input == 'q':
-                    print("Quitting the program...")
-                    return
                 
                 # Add a small delay before the next recording attempt
                 time.sleep(1)
@@ -145,10 +145,9 @@ def main():
                     os.remove(audio_filename)
                     logging.info(f"Temporary audio file {audio_filename} removed")
                 print("Press Enter to record again, or 'q' to quit.")
-                user_input = input().lower()
-                if user_input == 'q':
+                if input().lower() == 'q':
                     print("Quitting the program...")
-                    return
+                    break
                 time.sleep(1)
             except Exception as e:
                 logging.error(f"Error in main loop: {str(e)}", exc_info=True)

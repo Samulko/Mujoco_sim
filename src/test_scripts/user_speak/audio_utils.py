@@ -24,7 +24,7 @@ def reset_audio_stream(sample_rate=16000):
 def record_audio(filename, sample_rate=16000, max_duration=60):
     try:
         logging.info("Starting audio recording...")
-        print("Press Enter to start recording, press Enter again to stop.")
+        print("Recording... (Press Enter to stop)")
         
         q = queue.Queue()
         
@@ -44,8 +44,7 @@ def record_audio(filename, sample_rate=16000, max_duration=60):
         reset_audio_stream(sample_rate)
         
         with sd.InputStream(samplerate=sample_rate, channels=1, callback=audio_callback):
-            print("Recording... (Press Enter to stop)")
-            thread.join()
+            event.wait()
         
         recording = []
         
@@ -85,3 +84,6 @@ def record_audio(filename, sample_rate=16000, max_duration=60):
         # Ensure audio stream is stopped and resources are released
         sd.stop()
         time.sleep(0.5)
+
+def is_silent(audio_data, threshold=500):
+    return np.max(np.abs(audio_data)) < threshold

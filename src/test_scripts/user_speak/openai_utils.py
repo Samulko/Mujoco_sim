@@ -4,29 +4,26 @@ import logging
 import tempfile
 import subprocess
 import time
+import backoff
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def transcribe_audio(filename, max_retries=3):
-    for attempt in range(max_retries):
-        try:
-            logging.info(f"Starting transcription of {filename} (Attempt {attempt + 1})")
-            with open(filename, "rb") as audio_file:
-                transcript = client.audio.transcriptions.create(
-                    model="whisper-1", 
-                    file=audio_file
-                )
-            logging.info("Transcription completed successfully")
-            return transcript.text
-        except Exception as e:
-            logging.error(f"Error in transcribe_audio (Attempt {attempt + 1}): {str(e)}", exc_info=True)
-            if attempt < max_retries - 1:
-                print(f"Transcription failed. Retrying... (Attempt {attempt + 2})")
-                time.sleep(2)  # Wait for 2 seconds before retrying
-            else:
-                print("Max retries reached. Transcription failed.")
-                raise
+@backoff.on_exception(backoff.expo, Exception, max_tries=3)
+def transcribe_audio(filename):
+    try:
+        logging.info(f"Starting transcription of {filename}")
+        with open(filename, "rb") as audio_file:
+            transcript = client.audio.transcriptions.create(
+                model="whisper-1", 
+                file=audio_file
+            )
+        logging.info("Transcription completed successfully")
+        return transcript.text
+    except Exception as e:
+        logging.error(f"Error in transcribe_audio: {str(e)}", exc_info=True)
+        raise
 
+@backoff.on_exception(backoff.expo, Exception, max_tries=3)
 def generate_response(prompt, conversation_history):
     try:
         messages = [{"role": "system", "content": "You are a helpful assistant."}]
@@ -40,9 +37,9 @@ def generate_response(prompt, conversation_history):
         return response.choices[0].message.content
     except Exception as e:
         logging.error(f"Error in generate_response: {str(e)}", exc_info=True)
-        print(f"An error occurred while generating response: {str(e)}")
-        return None
+        raise
 
+@backoff.on_exception(backoff.expo, Exception, max_tries=3)
 def text_to_speech(text):
     try:
         response = client.audio.speech.create(
@@ -74,4 +71,4 @@ def text_to_speech(text):
         
     except Exception as e:
         logging.error(f"Error in text_to_speech: {str(e)}", exc_info=True)
-        print(f"An error occurred during text-to-speech: {str(e)}")
+        raise
