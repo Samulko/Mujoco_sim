@@ -124,10 +124,14 @@ def main():
                 if user_input == 'q':
                     print("Quitting the program...")
                     return
+                
+                # Add a small delay before the next recording attempt
+                time.sleep(1)
 
             except TimeoutError:
                 print("Recording timed out. Please try again.")
                 logging.warning("Recording timed out")
+                time.sleep(1)
             except KeyboardInterrupt:
                 print("\nRecording interrupted by user.")
                 logging.info("Recording interrupted by user")
@@ -139,12 +143,14 @@ def main():
                 if user_input == 'q':
                     print("Quitting the program...")
                     return
+                time.sleep(1)
             except Exception as e:
                 logging.error(f"Error in main loop: {str(e)}", exc_info=True)
                 print(f"An error occurred. Please check the log file at {log_file} for details.")
                 print("Press Enter to try again, or 'q' to quit.")
                 if input().lower() == 'q':
                     break
+                time.sleep(1)
 
         print(f"Thank you for using the voice-to-text assistant! Transcriptions have been saved to {transcription_filename}")
         logging.info("Script execution completed successfully")

@@ -42,13 +42,17 @@ def record_audio(filename, sample_rate=16000):
             if is_recording:
                 recording.append(indata.copy())
         
-        threading.Thread(target=input_thread, daemon=True).start()
+        input_thread = threading.Thread(target=input_thread, daemon=True)
+        input_thread.start()
         
         reset_audio_stream(sample_rate)
         
         with sd.InputStream(samplerate=sample_rate, channels=1, callback=audio_callback):
             while is_recording or not recording:
                 time.sleep(0.1)
+        
+        # Ensure the input thread is properly terminated
+        input_thread.join(timeout=1)
         
         if not recording:
             print("No audio recorded.")
@@ -72,8 +76,14 @@ def record_audio(filename, sample_rate=16000):
         wav.write(filename, sample_rate, recording)
         logging.info(f"Audio saved to {filename}")
         
+        # Add a small delay to allow resources to be released
+        time.sleep(0.5)
+        
         return filename
     except Exception as e:
         logging.error(f"Error in record_audio: {str(e)}", exc_info=True)
         print(f"An error occurred while recording audio: {str(e)}")
         return None
+    finally:
+        # Ensure audio stream is stopped and resources are released
+        sd.stop()
