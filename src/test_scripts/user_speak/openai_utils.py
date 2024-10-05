@@ -3,6 +3,7 @@ import os
 import logging
 import tempfile
 import subprocess
+import time
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
