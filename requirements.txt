@@ -5,7 +5,9 @@ langchain
 faiss-cpu
 langchain_community
 langchain-openai
-python-dotenv
-jsonschema
 python-dotenv==1.0.1
+jsonschema
 sounddevice
+numpy
+scipy
+pydub

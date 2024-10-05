@@ -187,16 +187,22 @@ def text_to_speech(text):
             temp_audio.write(response.content)
             temp_audio_path = temp_audio.name
         
-        # Play the audio using mpg123
-        subprocess.run(["mpg123", "-q", temp_audio_path], check=True)
+        # Try to play the audio using mpg123
+        try:
+            subprocess.run(["mpg123", "-q", temp_audio_path], check=True)
+            logging.info("Text-to-speech playback completed")
+        except FileNotFoundError:
+            print("Error: mpg123 not found. Please install mpg123 to enable audio playback.")
+            print("You can install it on Ubuntu/Debian with: sudo apt-get install mpg123")
+            print("For other systems, please refer to your package manager or mpg123 website.")
+            logging.error("mpg123 not found on the system")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Error playing audio: {str(e)}", exc_info=True)
+            print(f"An error occurred during audio playback: {str(e)}")
         
         # Remove the temporary file
         os.remove(temp_audio_path)
         
-        logging.info("Text-to-speech playback completed")
-    except subprocess.CalledProcessError as e:
-        logging.error(f"Error playing audio: {str(e)}", exc_info=True)
-        print(f"An error occurred during audio playback: {str(e)}")
     except Exception as e:
         logging.error(f"Error in text_to_speech: {str(e)}", exc_info=True)
         print(f"An error occurred during text-to-speech: {str(e)}")
