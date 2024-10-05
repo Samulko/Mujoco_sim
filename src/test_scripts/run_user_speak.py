@@ -1,12 +1,12 @@
 import os
 import sys
 
-# Add the parent directory of 'test_scripts' to the Python path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.append(parent_dir)
+# Add the src directory to the Python path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(os.path.dirname(script_dir))
+sys.path.append(src_dir)
 
-from user_speak.main import main
+from test_scripts.user_speak.main import main
 
 if __name__ == "__main__":
     main()
