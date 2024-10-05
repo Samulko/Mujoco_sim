@@ -6,6 +6,7 @@ import threading
 import time
 import ctypes
 import queue
+import sys
 
 def set_alsa_params():
     try:
