@@ -94,9 +94,8 @@ def record_audio(filename, sample_rate=16000):
         def audio_callback(indata, frames, time, status):
             if is_recording:
                 recording.append(indata.copy())
-                if len(recording) % 10 == 0:  # Update every 10 frames
-                    volume_norm = np.linalg.norm(indata) * 10
-                    print(f"Recording volume: {'#' * min(int(volume_norm), 50)}", end='\r')
+                volume_norm = np.linalg.norm(indata) * 10
+                print(f"Recording volume: {'#' * min(int(volume_norm), 50)}", end='\r', flush=True)
         
         threading.Thread(target=input_thread, daemon=True).start()
         
@@ -183,15 +182,21 @@ def text_to_speech(text):
             input=text
         )
         
-        # Convert the binary response content to an AudioSegment
-        audio = AudioSegment.from_mp3(io.BytesIO(response.content))
+        # Save the audio to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio:
+            temp_audio.write(response.content)
+            temp_audio_path = temp_audio.name
         
-        # Play the audio
-        play(audio)
+        # Play the audio using mpg123
+        subprocess.run(["mpg123", "-q", temp_audio_path], check=True)
         
-        time.sleep(0.5)  # Add a small delay after playback
+        # Remove the temporary file
+        os.remove(temp_audio_path)
         
         logging.info("Text-to-speech playback completed")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error playing audio: {str(e)}", exc_info=True)
+        print(f"An error occurred during audio playback: {str(e)}")
     except Exception as e:
         logging.error(f"Error in text_to_speech: {str(e)}", exc_info=True)
         print(f"An error occurred during text-to-speech: {str(e)}")
