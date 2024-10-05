@@ -94,8 +94,6 @@ def record_audio(filename, sample_rate=16000):
         def audio_callback(indata, frames, time, status):
             if is_recording:
                 recording.append(indata.copy())
-                volume_norm = np.linalg.norm(indata) * 10
-                print(f"Recording volume: {'#' * min(int(volume_norm), 50)}", end='\r', flush=True)
         
         threading.Thread(target=input_thread, daemon=True).start()
         
