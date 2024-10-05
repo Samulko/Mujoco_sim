@@ -1,10 +1,6 @@
 from .main import main
 
 __all__ = ['main']
-    set_alsa_params()
-    temp_dir = None
-    silent_recordings = 0
-    max_silent_recordings = 3
     conversation_history = deque(maxlen=5)  # Store last 5 exchanges
     try:
         # Use a temporary directory for audio files
