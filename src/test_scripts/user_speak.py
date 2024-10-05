@@ -14,6 +14,23 @@ import signal
 import io
 from pydub import AudioSegment
 from pydub.playback import play
+import subprocess
+
+# Check if ffmpeg is available in PATH
+def is_ffmpeg_available():
+    try:
+        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except FileNotFoundError:
+        return False
+
+# If ffmpeg is not in PATH, try to set it manually
+if not is_ffmpeg_available():
+    ffmpeg_path = "/usr/bin"  # Adjust this path if ffmpeg is installed elsewhere
+    os.environ["PATH"] += os.pathsep + ffmpeg_path
+    if not is_ffmpeg_available():
+        print("Error: FFmpeg not found. Please install FFmpeg and make sure it's in your system PATH.")
+        sys.exit(1)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -32,7 +49,14 @@ if not os.getenv("OPENAI_API_KEY"):
     sys.exit(1)
 
 # Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+try:
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    # Test the API key with a simple request
+    client.models.list()
+except Exception as e:
+    print(f"Error: Unable to initialize OpenAI client. Please check your API key. Error: {str(e)}")
+    logging.error(f"Unable to initialize OpenAI client: {str(e)}")
+    sys.exit(1)
 
 def record_audio(filename, sample_rate=16000):
     try:
