@@ -16,6 +16,12 @@ from pydub import AudioSegment
 from pydub.playback import play
 import subprocess
 
+def reset_audio_stream(sample_rate=16000):
+    sd.stop()
+    sd.default.samplerate = sample_rate
+    sd.default.channels = 1
+    sd.default.dtype = 'int16'
+
 # Check if ffmpeg is available in PATH
 def is_ffmpeg_available():
     try:
@@ -85,6 +91,8 @@ def record_audio(filename, sample_rate=16000):
         
         threading.Thread(target=input_thread, daemon=True).start()
         
+        reset_audio_stream(sample_rate)
+        
         with sd.InputStream(samplerate=sample_rate, channels=1, callback=audio_callback):
             while is_recording or not recording:
                 time.sleep(0.1)
@@ -100,8 +108,9 @@ def record_audio(filename, sample_rate=16000):
         recording = np.concatenate(recording, axis=0)
         
         # Normalize the recording to 16-bit range
-        if np.max(np.abs(recording)) > 0:
-            recording = np.int16(recording / np.max(np.abs(recording)) * 32767)
+        max_value = np.max(np.abs(recording))
+        if max_value > 0:
+            recording = np.int16(recording / max_value * 32767)
         else:
             print("Warning: Recording contains only silence.")
             logging.warning("Recording contains only silence.")
@@ -195,6 +204,9 @@ def main():
 
         while True:
             try:
+                # Reset audio stream before each recording
+                reset_audio_stream()
+                
                 # Set up the timeout
                 signal.signal(signal.SIGALRM, timeout_handler)
                 signal.alarm(TIMEOUT)
