@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import os
 import time
 import logging
+from engineer import StructuralEngineerAgent
 
 # Load environment variables from .env file
 load_dotenv()
@@ -34,48 +35,8 @@ class ManagerAgent:
             # Initialize conversation memory
             self.memory = ConversationBufferMemory(return_messages=True)
 
-            # Define the prompt template for the AI
-            self.prompt = ChatPromptTemplate.from_template(
-                """
-                You are the Manager Agent in a multi-agent robotic system for industrial disassembly tasks. Your role is to coordinate all interactions and assign tasks to other agents, ensuring safe, efficient, and compliant operations. You are responsible for:
-
-                1. Interpreting user commands accurately, even if they are ambiguous or complex. Ask for clarification if you don't understand, or the input is outside your scope.
-                2. Maintaining context over multiple interactions using conversation history.
-                3. Prioritizing and coordinating tasks among specialized agents.
-                4. Synthesizing information from various agents to make informed decisions.
-                5. Communicating results, progress, and any issues to the user clearly and proactively.
-                6. Continuously monitoring task progress and adjusting plans as needed. If you are not sure, ask the user for help.
-
-                The agents you coordinate are:
-                - Structural Engineer Agent: Validates requests against current disassembly manuals using a RAG system.
-                - Stability Agent: Analyzes the stability of structures during disassembly and suggests safety measures.
-                - Planning Agent: Generates detailed action sequence plans for industrial arm robot control systems.
-                - Safety Agent: Oversees all operations to ensure compliance with safety standards and regulations.
-
-                Use your advanced natural language understanding to interpret the user's intent and maintain conversation context. When processing a request:
-
-                1. Interpret the user's intent and clarify if necessary.
-                2. Determine which agent(s) need to be involved.
-                3. Prioritize the task within the current workflow.
-                4. Coordinate the necessary information flow between agents.
-                5. Synthesize the results from various agents.
-                6. Develop a primary plan and contingency plans.
-                7. Monitor progress and provide regular updates to the user.
-
-                Always strive for clear communication, efficient task routing, and safe operation. If any stage cannot be completed safely or efficiently, communicate this to the user along with the reasons and possible alternatives.
-
-                Current conversation:
-                {history}
-                Human: {human_input}
-                AI: Let's process this request step by step:
-                1. Interpret the user's intent.
-                2. Determine which agent(s) need to be involved.
-                3. Prioritize the task and coordinate information flow.
-                4. Synthesize results and develop plans.
-                5. Formulate a clear response or action plan for the user. Be brief in your response.
-                Response:
-                """
-            )
+            # Initialize StructuralEngineerAgent
+            self.engineer_agent = StructuralEngineerAgent()
 
             # Initialize a conversation log
             self.conversation_log = []
@@ -98,23 +59,43 @@ class ManagerAgent:
 
     def process_command(self, command):
         try:
-            # Use the language model to interpret the command
-            response = self.llm.invoke(input=f"Interpret this command for disassembling a simple portal frame: {command}")
-            interpreted_command = response.content
-            if isinstance(interpreted_command, list):
-                interpreted_command = interpreted_command[0] if interpreted_command else ""
-            interpreted_command = str(interpreted_command).strip()
-            self.log_conversation(f"[INFO] Interpreted command: {interpreted_command}")
+            self.log_conversation(f"[INFO] Received command: {command}")
 
-            # Here you would typically interact with other agents (Structural Engineer, Stability, Planning)
-            # For this example, we'll just log the interpreted command
-            self.log_conversation(f"[INFO] Processing command: {interpreted_command}")
-            
-            # Simulate response from other agents
-            self.log_conversation("[INFO] Simulated validation: Request is standard")
-            self.log_conversation("[INFO] Simulated planning: Plan created successfully")
+            # Send the command to the Structural Engineer Agent
+            is_standard, validation_details, _ = self.engineer_agent.handle_validate_request(command)
 
-            return f"Command processed: {interpreted_command}"
+            self.log_conversation(f"[INFO] Engineer response - Is Standard: {is_standard}")
+
+            if is_standard:
+                disassembly_instructions = validation_details.get('disassembly_instructions', [])
+                safety_instructions = validation_details.get('safety_instructions', [])
+
+                # Format and print disassembly instructions
+                print("Disassembly Instructions:")
+                for i, step in enumerate(disassembly_instructions, 1):
+                    print(f"{i}. {step['step']}")
+
+                # Format and print safety instructions
+                print("\nSafety Instructions:")
+                for i, instruction in enumerate(safety_instructions, 1):
+                    print(f"{i}. {instruction}")
+
+                # Ask if user wants to make modifications
+                while True:
+                    modify = input("\nDo you want to make modifications to the sequence? (yes/no): ").lower()
+                    if modify in ['yes', 'no']:
+                        break
+                    print("Please answer with 'yes' or 'no'.")
+
+                if modify == 'yes':
+                    print("Please provide your modifications. (Not implemented in this version)")
+                    # Here you would implement the logic to handle modifications
+
+            else:
+                print("The structure does not match any standard procedures in our database.")
+                print("Please provide more details or consult with a specialist for a custom disassembly plan.")
+
+            return "Command processed successfully."
         except Exception as e:
             error_message = f"Error processing command: {e}"
             self.log_conversation(f"[ERROR] {error_message}")

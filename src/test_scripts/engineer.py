@@ -189,13 +189,13 @@ class StructuralEngineerAgent:
 
             docs = self.vectorstore.similarity_search(request, k=2)
             if not docs:
-                return False, "No relevant information found in the RAG system.", ""
+                return False, {"error": "No relevant information found in the RAG system."}, ""
 
             context = "\n".join([doc.page_content for doc in docs])
             print(f"StructuralEngineerAgent: Retrieved context: {context}")
 
             response = self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4",
                 temperature=0,
                 response_model=EngineerResponse,
                 messages=[
@@ -214,7 +214,7 @@ class StructuralEngineerAgent:
             return response.is_standard, response.dict(), ""
         except Exception as e:
             print(f"StructuralEngineerAgent: Error handling validate request: {str(e)}")
-            return False, f"Error: {str(e)}", ""
+            return False, {"error": str(e)}, ""
 
     def export_response(self, request, response):
         export_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'engineer_response')
@@ -234,21 +234,4 @@ class StructuralEngineerAgent:
 
         print(f"Response exported to: {filepath}")
 
-# Main execution block
-if __name__ == '__main__':
-    try:
-        structural_engineer_agent = StructuralEngineerAgent()
-        
-        while True:
-            request = input("Enter a disassembly request (or 'quit' to exit): ")
-            if request.lower() == 'quit':
-                break
-            
-            is_standard, validation_details, _ = structural_engineer_agent.handle_validate_request(request)
-            
-            print(f"Is Standard: {is_standard}")
-            print(f"Validation Details: {json.dumps(validation_details, indent=2)}")
-            print()
-        
-    except Exception as e:
-        print(f"Structural Engineer Agent failed: {str(e)}")
+# Main execution block is removed as it's no longer needed
