@@ -2,9 +2,10 @@ from openai import OpenAI
 import os
 import logging
 import tempfile
-import subprocess
-import time
 import backoff
+from pydub import AudioSegment
+from pydub.playback import play
+import simpleaudio as sa
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -53,16 +54,24 @@ def text_to_speech(text):
             temp_audio.write(response.content)
             temp_audio_path = temp_audio.name
         
-        # Try to play the audio using mpg123
+        # Play the audio using simpleaudio
         try:
-            subprocess.run(["mpg123", "-q", temp_audio_path], check=True)
+            audio = AudioSegment.from_mp3(temp_audio_path)
+            audio = audio.set_channels(1)  # Convert to mono
+            audio = audio.set_frame_rate(44100)  # Set sample rate to 44.1 kHz
+            
+            # Convert to raw PCM data
+            raw_data = audio.raw_data
+            num_channels = audio.channels
+            bytes_per_sample = audio.sample_width
+            sample_rate = audio.frame_rate
+
+            # Play audio
+            play_obj = sa.play_buffer(raw_data, num_channels, bytes_per_sample, sample_rate)
+            play_obj.wait_done()
+            
             logging.info("Text-to-speech playback completed")
-        except FileNotFoundError:
-            print("Error: mpg123 not found. Please install mpg123 to enable audio playback.")
-            print("You can install it on Ubuntu/Debian with: sudo apt-get install mpg123")
-            print("For other systems, please refer to your package manager or mpg123 website.")
-            logging.error("mpg123 not found on the system")
-        except subprocess.CalledProcessError as e:
+        except Exception as e:
             logging.error(f"Error playing audio: {str(e)}", exc_info=True)
             print(f"An error occurred during audio playback: {str(e)}")
         

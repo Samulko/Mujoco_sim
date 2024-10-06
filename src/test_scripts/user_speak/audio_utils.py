@@ -28,9 +28,10 @@ def record_audio(filename, sample_rate=16000, max_duration=60):
         
         q = queue.Queue()
         
-        def audio_callback(indata, frames, time, status):
+        def audio_callback(indata, frames, time_info, status):
             if status:
                 print(status, file=sys.stderr)
+                logging.warning(f"Recording status: {status}")
             q.put(indata.copy())
         
         def input_thread(event):
@@ -44,34 +45,44 @@ def record_audio(filename, sample_rate=16000, max_duration=60):
         reset_audio_stream(sample_rate)
         
         with sd.InputStream(samplerate=sample_rate, channels=1, callback=audio_callback):
-            event.wait()
+            start_time = time.time()
+            while not event.is_set():
+                if (time.time() - start_time) > max_duration:
+                    print("Maximum recording duration reached.")
+                    logging.warning("Maximum recording duration reached.")
+                    event.set()
+                    break
+                time.sleep(0.1)
         
+        # Gather all recorded data
         recording = []
-        
-        try:
-            while True:
-                recording.append(q.get_nowait())
-        except queue.Empty:
-            pass
-        
-        recording = np.concatenate(recording, axis=0)
-        
-        if len(recording) == 0:
+        while not q.empty():
+            recording.append(q.get())
+
+        if not recording:
             print("No audio recorded.")
+            logging.warning("No audio recorded.")
             return None
-        
+
+        recording = np.concatenate(recording, axis=0)
+
         print("\nRecording finished.")
         logging.info("Audio recording completed.")
-        
-        # Normalize the recording to 16-bit range
-        max_value = np.max(np.abs(recording))
-        if max_value > 0:
-            recording = np.int16(recording / max_value * 32767)
-        else:
-            print("Warning: Recording contains only silence.")
+
+        # Check for silence or low volume
+        rms = np.sqrt(np.mean(recording**2))
+        logging.debug(f"Recording RMS value: {rms:.4f}")
+
+        if rms < 0.005:
+            print("Recording contains only silence.")
             logging.warning("Recording contains only silence.")
             return None
-        
+        elif rms < 0.02:
+            print(f"Warning: Recording appears to be very quiet (RMS: {rms:.4f}).")
+            logging.warning(f"Recording appears to be very quiet (RMS: {rms:.4f}).")
+        else:
+            logging.info(f"Recording RMS value: {rms:.4f}")
+
         wav.write(filename, sample_rate, recording)
         logging.info(f"Audio saved to {filename}")
         
@@ -84,6 +95,3 @@ def record_audio(filename, sample_rate=16000, max_duration=60):
         # Ensure audio stream is stopped and resources are released
         sd.stop()
         time.sleep(0.5)
-
-def is_silent(audio_data, threshold=500):
-    return np.max(np.abs(audio_data)) < threshold

@@ -5,9 +5,9 @@ import tempfile
 from collections import deque
 import time
 import sys
-import signal
 import shutil
 from dotenv import load_dotenv
+import threading
 
 from .audio_utils import set_alsa_params, record_audio
 from .openai_utils import transcribe_audio, generate_response, text_to_speech
@@ -29,9 +29,6 @@ if not os.getenv("OPENAI_API_KEY"):
     sys.exit(1)
 
 TIMEOUT = 60  # 60 seconds timeout for recording
-
-def timeout_handler(signum, frame):
-    raise TimeoutError("Recording timed out")
 
 def handle_conversation(audio_filename, transcription_filename, conversation_history):
     try:
@@ -105,20 +102,27 @@ def main():
 
         while True:
             try:
-                # Set up the timeout
-                signal.signal(signal.SIGALRM, timeout_handler)
-                signal.alarm(TIMEOUT)
+                # Set up a threading timer for timeout
+                timeout_event = threading.Event()
+                def timeout_handler():
+                    timeout_event.set()
+                    print("Recording timed out. Please try again.")
+                    logging.warning("Recording timed out")
+                timeout_timer = threading.Timer(TIMEOUT, timeout_handler)
+                timeout_timer.start()
 
                 print("Press Enter to start recording, or 'q' to quit.")
                 user_input = input().lower()
                 if user_input == 'q':
                     print("Quitting the program...")
+                    timeout_timer.cancel()
                     break
 
+                # Handle conversation
                 success = handle_conversation(audio_filename, transcription_filename, conversation_history)
                 
-                # Cancel the alarm
-                signal.alarm(0)
+                # Cancel the timeout timer
+                timeout_timer.cancel()
 
                 if not success:
                     print("Try again or enter 'q' to quit.")
@@ -134,10 +138,6 @@ def main():
                 # Add a small delay before the next recording attempt
                 time.sleep(1)
 
-            except TimeoutError:
-                print("Recording timed out. Please try again.")
-                logging.warning("Recording timed out")
-                time.sleep(1)
             except KeyboardInterrupt:
                 print("\nRecording interrupted by user.")
                 logging.info("Recording interrupted by user")
